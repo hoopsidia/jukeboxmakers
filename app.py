@@ -98,6 +98,36 @@ async def api_songs(
     return {"songs": songs, "count": len(songs)}
 
 
+@app.get("/api/search")
+async def api_search(q: str = Query(...), limit: int = Query(default=20, le=50)):
+    """Search songs via iTunes catalog. Returns results with artwork."""
+    import httpx
+    from urllib.parse import quote
+
+    if not q or len(q.strip()) < 2:
+        return {"results": []}
+
+    try:
+        async with httpx.AsyncClient(timeout=8) as client:
+            resp = await client.get(
+                f"https://itunes.apple.com/search?term={quote(q.strip())}&media=music&limit={limit}&entity=song"
+            )
+            data = resp.json()
+            results = []
+            for item in data.get("results", []):
+                results.append({
+                    "title": item.get("trackName", ""),
+                    "artist": item.get("artistName", ""),
+                    "album": item.get("collectionName", ""),
+                    "artworkUrl": item.get("artworkUrl100", "").replace("100x100", "300x300"),
+                    "duration": item.get("trackTimeMillis", 0) // 1000,
+                })
+            return {"results": results}
+    except Exception as e:
+        logger.warning(f"iTunes search failed: {e}")
+        return {"results": []}
+
+
 def _clean_query(q: str) -> list[str]:
     """Return a list of search queries to try, from specific to broad."""
     import re

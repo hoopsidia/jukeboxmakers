@@ -111,6 +111,169 @@ h1 {
     cursor: not-allowed;
 }
 
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 4px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 4px;
+}
+
+.tab-btn {
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 8px 24px;
+    border-radius: 30px;
+    font-family: 'Proxima Nova', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.tab-btn.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Search */
+.search-container {
+    margin-bottom: 20px;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 10px 16px;
+    transition: border-color 0.3s;
+}
+
+.search-bar:focus-within {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.search-icon {
+    color: rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+#searchInput {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: 'Proxima Nova', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+}
+
+#searchInput::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.search-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-family: 'Proxima Nova', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.search-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.search-result-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.search-result-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.search-result-card:hover .song-rank {
+    color: #fff;
+}
+
+.search-result-card.playing {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.search-result-art {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.song-duration {
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.25);
+    margin-top: 2px;
+}
+
+.search-loading,
+.search-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 14px;
+    font-weight: 300;
+}
+
 main {
     max-width: 1200px;
     margin: 0 auto;
