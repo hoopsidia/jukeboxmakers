@@ -415,6 +415,8 @@ async def api_voice(request: Request):
     voice_id = body.get("voiceId", "").strip()
     script = body.get("script", "").strip()
 
+    logger.info(f"Voice request: voiceId={voice_id!r}, voiceDesc={voice_desc!r}, script={script[:50]!r}")
+
     if not script:
         return {"error": "no script provided"}
 
@@ -423,7 +425,9 @@ async def api_voice(request: Request):
         "valentin": "qhRRShcIhxtvobu7E7kH",
     }
 
-    # Resolve voice
+    # Resolve voice — default to valentin if nothing specified
+    if not voice_id and not voice_desc:
+        voice_id = "valentin"
     resolved_voice_id = VOICE_MAP.get(voice_id, voice_id) if voice_id else None
 
     api_key = os.environ.get("ELEVENLABS_API_KEY", "")
