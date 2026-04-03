@@ -481,6 +481,12 @@ main {
     color: #fff;
 }
 
+.player-waveform {
+    width: 100%;
+    height: 32px;
+    display: block;
+}
+
 #playerAudio {
     width: 100%;
     height: 28px;
