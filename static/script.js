@@ -58,55 +58,91 @@ function showMore() {
 // --- Player & Waveform ---
 let currentPlayerTitle = '';
 let currentPlayerArtist = '';
-let audioCtx = null;
-let analyser = null;
-let sourceNode = null;
+let waveformData = null;
 let waveformAnimId = null;
 
-function initWaveform() {
-    if (audioCtx) return; // already initialized
-    const audio = document.getElementById('playerAudio');
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256;
-    sourceNode = audioCtx.createMediaElementSource(audio);
-    sourceNode.connect(analyser);
-    analyser.connect(audioCtx.destination);
+async function loadWaveform(audioUrl) {
+    const canvas = document.getElementById('playerWaveform');
+    if (!canvas) return;
+
+    waveformData = null;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    try {
+        const resp = await fetch(audioUrl);
+        const arrayBuffer = await resp.arrayBuffer();
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+        audioCtx.close();
+
+        // Downsample to ~200 bars
+        const rawData = decoded.getChannelData(0);
+        const barCount = 200;
+        const blockSize = Math.floor(rawData.length / barCount);
+        const peaks = [];
+        for (let i = 0; i < barCount; i++) {
+            let sum = 0;
+            for (let j = 0; j < blockSize; j++) {
+                sum += Math.abs(rawData[i * blockSize + j]);
+            }
+            peaks.push(sum / blockSize);
+        }
+
+        // Normalize
+        const max = Math.max(...peaks) || 1;
+        waveformData = peaks.map(p => p / max);
+
+        drawStaticWaveform();
+        startProgressUpdate();
+    } catch (e) {
+        // Silently fail - waveform is optional
+    }
 }
 
-function drawWaveform() {
+function drawStaticWaveform() {
     const canvas = document.getElementById('playerWaveform');
-    if (!canvas || !analyser) return;
+    if (!canvas || !waveformData) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
     const ctx = canvas.getContext('2d');
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+    ctx.scale(dpr, dpr);
 
-    function draw() {
-        waveformAnimId = requestAnimationFrame(draw);
-        analyser.getByteFrequencyData(dataArray);
+    const audio = document.getElementById('playerAudio');
+    const progress = audio.duration ? audio.currentTime / audio.duration : 0;
+    const progressX = progress * rect.width;
 
-        // Resize canvas to actual display size
-        const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width * (window.devicePixelRatio || 1);
-        canvas.height = rect.height * (window.devicePixelRatio || 1);
-        ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+    const barCount = waveformData.length;
+    const gap = 1;
+    const barWidth = (rect.width / barCount) - gap;
+    const centerY = rect.height / 2;
 
-        ctx.clearRect(0, 0, rect.width, rect.height);
+    ctx.clearRect(0, 0, rect.width, rect.height);
 
-        const barCount = 80;
-        const barWidth = rect.width / barCount;
-        const step = Math.floor(bufferLength / barCount);
+    for (let i = 0; i < barCount; i++) {
+        const x = i * (barWidth + gap);
+        const barHeight = waveformData[i] * rect.height * 0.85;
 
-        for (let i = 0; i < barCount; i++) {
-            const val = dataArray[i * step] / 255;
-            const barHeight = val * rect.height;
-            const x = i * barWidth;
-            const brightness = Math.floor(40 + val * 60);
-            ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
-            ctx.fillRect(x, rect.height - barHeight, barWidth - 1, barHeight);
+        if (x < progressX) {
+            ctx.fillStyle = '#666';
+        } else {
+            ctx.fillStyle = '#222';
         }
+
+        ctx.fillRect(x, centerY - barHeight / 2, barWidth, barHeight);
     }
-    draw();
+}
+
+function startProgressUpdate() {
+    if (waveformAnimId) cancelAnimationFrame(waveformAnimId);
+    function update() {
+        waveformAnimId = requestAnimationFrame(update);
+        drawStaticWaveform();
+    }
+    update();
 }
 
 function stopWaveform() {
@@ -114,12 +150,28 @@ function stopWaveform() {
         cancelAnimationFrame(waveformAnimId);
         waveformAnimId = null;
     }
+    waveformData = null;
     const canvas = document.getElementById('playerWaveform');
     if (canvas) {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 }
+
+// Click on waveform to seek
+document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('playerWaveform');
+    if (canvas) {
+        canvas.addEventListener('click', (e) => {
+            const audio = document.getElementById('playerAudio');
+            if (!audio.duration) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const ratio = x / rect.width;
+            audio.currentTime = ratio * audio.duration;
+        });
+    }
+});
 
 async function playSong(e, title, artist) {
     const bar = document.getElementById('playerBar');
@@ -146,9 +198,7 @@ async function playSong(e, title, artist) {
         if (data.previewUrl) {
             audio.src = data.previewUrl;
             audio.play();
-            initWaveform();
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            drawWaveform();
+            loadWaveform(data.previewUrl);
             if (data.trackName) { titleEl.textContent = data.trackName; currentPlayerTitle = data.trackName; }
             if (data.artistName) { artistEl.textContent = data.artistName; currentPlayerArtist = data.artistName; }
         } else {
