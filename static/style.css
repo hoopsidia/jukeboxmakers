@@ -136,9 +136,10 @@ header {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 3px 4px;
+    padding: 0 4px;
     transition: background 0.1s;
     cursor: pointer;
+    line-height: 1.4;
 }
 
 .search-result-card:hover {
@@ -180,9 +181,10 @@ main {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 3px 4px;
+    padding: 0 4px;
     transition: background 0.1s;
     cursor: pointer;
+    line-height: 1.4;
 }
 
 .song-card:hover {
@@ -222,7 +224,7 @@ main {
 
 .song-title {
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 400;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -366,7 +368,7 @@ main {
 
 #playerTitle {
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 400;
     color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -1,4 +1,4 @@
-let visibleCount = 20;
+let visibleCount = 40;
 const BATCH_SIZE = 20;
 
 // --- Tabs ---

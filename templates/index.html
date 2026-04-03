@@ -19,7 +19,7 @@
         <div class="tab-content active" id="tabTrending">
             <div class="songs-grid" id="songsGrid">
                 {% for song in songs %}
-                <div class="song-card" style="{% if loop.index > 20 %}display:none{% endif %}" data-index="{{ loop.index }}" ondblclick="playSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')">
+                <div class="song-card" style="{% if loop.index > 40 %}display:none{% endif %}" data-index="{{ loop.index }}" ondblclick="playSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')">
                     <div class="song-rank">{{ '%03d' | format(loop.index) }}</div>
                     <div class="song-info">
                         <div class="song-title">{{ song.title }}</div>
@@ -41,10 +41,10 @@
                 {% endif %}
             </div>
 
-            {% if songs | length > 20 %}
+            {% if songs | length > 40 %}
             <div class="show-more-container" id="showMoreContainer">
                 <button class="btn-show-more" id="btnShowMore" onclick="showMore()">[LOAD_MORE]</button>
-                <span class="show-more-count" id="showMoreCount">20/{{ songs | length }}</span>
+                <span class="show-more-count" id="showMoreCount">40/{{ songs | length }}</span>
             </div>
             {% endif %}
         </div>
