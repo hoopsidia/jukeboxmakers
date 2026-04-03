@@ -532,13 +532,8 @@ body.player-open {
 }
 
 /* Vibe AI tab */
-.vibe-bar {
-    flex-direction: column;
-    align-items: flex-start;
-}
-
 .vibe-bar textarea {
-    width: 100%;
+    flex: 1;
     background: none;
     border: none;
     outline: none;
