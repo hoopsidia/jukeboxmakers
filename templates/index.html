@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUKEBOXMAKERS</title>
+    <link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>JUKEBOXMAKERS</h1>
+            <div class="header-actions">
+                <span class="last-refresh" id="lastRefresh">
+                    Dernière mise à jour : {{ last_refresh or "jamais" }}
+                </span>
+                <button class="btn-refresh" id="btnRefresh" onclick="refreshData()">
+                    Actualiser
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="songs-grid" id="songsGrid">
+            {% for song in songs %}
+            <div class="song-card" style="{% if loop.index > 20 %}display:none{% endif %}" data-index="{{ loop.index }}">
+                <div class="song-rank">{{ loop.index }}</div>
+                <div class="song-cover">
+                    {% if song.cover_url %}
+                    <img src="{{ song.cover_url }}" alt="{{ song.title }}" loading="lazy">
+                    {% else %}
+                    <div class="cover-placeholder"><img src="/static/logo-placeholder.png" alt="Logo"></div>
+                    {% endif %}
+                </div>
+                <div class="song-info">
+                    <div class="song-title">{{ song.title }}</div>
+                    <div class="song-artist">{{ song.artist }}</div>
+                </div>
+                <div class="song-links">
+                    <button class="link-btn play" title="Ecouter" onclick="playSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </button>
+                    <button class="link-btn download" title="Telecharger" onclick="downloadSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not songs %}
+            <div class="empty-state">
+                <p>Chargement des sons en cours...</p>
+                <p>Le premier scan peut prendre quelques minutes.</p>
+                <button class="btn-refresh" onclick="location.reload()">Recharger</button>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if songs | length > 20 %}
+        <div class="show-more-container" id="showMoreContainer">
+            <button class="btn-show-more" id="btnShowMore" onclick="showMore()">
+                Voir plus
+            </button>
+            <span class="show-more-count" id="showMoreCount">20 / {{ songs | length }}</span>
+        </div>
+        {% endif %}
+    </main>
+
+    <div class="player-bar" id="playerBar">
+        <div class="player-info">
+            <img id="playerArt" class="player-art" src="" alt="">
+            <div class="player-text">
+                <span id="playerTitle">Aucun son</span>
+                <span id="playerArtist"></span>
+            </div>
+            <button class="player-close" onclick="closePlayer()">&times;</button>
+        </div>
+        <audio id="playerAudio" controls autoplay></audio>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

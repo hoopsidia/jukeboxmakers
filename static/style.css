@@ -1,0 +1,497 @@
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/static/fonts/FontsFree-Net-Proxima-Nova-Light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/static/fonts/ProximaNova-Regular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/static/fonts/ProximaNova-Bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/static/fonts/FontsFree-Net-Proxima-Nova-Xbold.otf') format('opentype');
+    font-weight: 800;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/static/fonts/ProximaNova-Black.otf') format('opentype');
+    font-weight: 900;
+    font-style: normal;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #000;
+    color: #fff;
+    min-height: 100vh;
+}
+
+header {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 20px 24px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-bottom: 14px;
+}
+
+h1 {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.last-refresh {
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.btn-refresh {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-family: 'Proxima Nova', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-refresh:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-refresh:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.songs-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.song-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+}
+
+.song-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.03);
+}
+
+.song-card:hover .song-rank {
+    color: #fff;
+}
+
+.song-rank {
+    font-size: 16px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.2);
+    min-width: 28px;
+    text-align: center;
+}
+
+.song-cover {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.song-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cover-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    padding: 8px;
+}
+
+.cover-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.song-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.song-title {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.song-artist {
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 2px;
+}
+
+.song-stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.usage-count {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.trend {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.trend-up { color: #fff; }
+.trend-down { color: rgba(255, 255, 255, 0.3); }
+.trend-stable { color: rgba(255, 255, 255, 0.2); }
+.trend-new {
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.song-links {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.link-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.link-btn:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.06);
+}
+
+.link-btn.play {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+}
+
+.link-btn.play:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.link-btn.download {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+}
+
+.link-btn.download:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.link-btn.download.loading {
+    opacity: 0.3;
+    pointer-events: none;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.1; }
+}
+
+.link-btn.tiktok {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.link-btn.spotify {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.link-btn.youtube {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.link-btn.tiktok:hover,
+.link-btn.spotify:hover,
+.link-btn.youtube:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.song-card.playing {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.04), inset 0 0 30px rgba(255, 255, 255, 0.02);
+}
+
+.song-card.playing .song-rank {
+    color: #fff;
+}
+
+/* Player bar */
+.player-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(50px) saturate(150%);
+    -webkit-backdrop-filter: blur(50px) saturate(150%);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+}
+
+.player-bar.active {
+    display: flex;
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 12px;
+}
+
+.player-art {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.player-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#playerTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#playerArtist {
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.player-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0 4px;
+    flex-shrink: 0;
+    transition: color 0.2s;
+}
+
+.player-close:hover {
+    color: #fff;
+}
+
+#playerAudio {
+    width: 100%;
+    height: 36px;
+    outline: none;
+    filter: invert(1) brightness(0.8);
+}
+
+body.player-open main {
+    padding-bottom: 140px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.empty-state p {
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 300;
+}
+
+.show-more-container {
+    text-align: center;
+    padding: 24px;
+}
+
+.btn-show-more {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 48px;
+    border-radius: 40px;
+    font-family: 'Proxima Nova', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.btn-show-more:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.05);
+}
+
+.show-more-count {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.25);
+}
+
+@media (max-width: 600px) {
+    header {
+        padding: 16px 12px 10px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    main {
+        padding: 16px 12px;
+    }
+
+    .song-card {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .song-cover {
+        width: 44px;
+        height: 44px;
+    }
+
+    .song-links {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .link-btn {
+        width: 30px;
+        height: 30px;
+    }
+}

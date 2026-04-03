@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "TikTok Sport Edit Trends",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["preview-proxy.mjs"],
+      "port": 3111
+    }
+  ]
+}
