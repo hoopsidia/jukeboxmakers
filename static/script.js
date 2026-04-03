@@ -2,17 +2,27 @@ let visibleCount = 40;
 const BATCH_SIZE = 20;
 
 // --- Tabs ---
+const TAB_IDS = ['trending', 'search', 'lyrics', 'genre'];
+
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
+    const idx = TAB_IDS.indexOf(tab);
+    if (idx >= 0) {
+        document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    }
+
     if (tab === 'trending') {
-        document.querySelectorAll('.tab-btn')[0].classList.add('active');
         document.getElementById('tabTrending').classList.add('active');
-    } else {
-        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    } else if (tab === 'search') {
         document.getElementById('tabSearch').classList.add('active');
         document.getElementById('searchInput').focus();
+    } else if (tab === 'lyrics') {
+        document.getElementById('tabLyrics').classList.add('active');
+        document.getElementById('lyricsInput').focus();
+    } else if (tab === 'genre') {
+        document.getElementById('tabGenre').classList.add('active');
     }
 }
 
@@ -26,7 +36,6 @@ function showMore() {
         const idx = parseInt(card.dataset.index);
         if (idx <= nextLimit) {
             card.style.display = 'flex';
-            loadCoverForCard(card);
         }
     });
 
@@ -37,22 +46,6 @@ function showMore() {
     if (visibleCount >= total) {
         const container = document.getElementById('showMoreContainer');
         if (container) container.style.display = 'none';
-    }
-}
-
-// --- Refresh ---
-async function refreshData() {
-    const btn = document.getElementById('btnRefresh');
-    btn.disabled = true;
-    btn.textContent = 'Actualisation...';
-
-    try {
-        await fetch('/api/refresh', { method: 'POST' });
-        document.getElementById('lastRefresh').textContent = 'Actualisation en cours...';
-        setTimeout(() => location.reload(), 30000);
-    } catch (e) {
-        btn.disabled = false;
-        btn.textContent = 'Actualiser';
     }
 }
 
@@ -81,8 +74,6 @@ async function playSong(e, title, artist) {
             audio.play();
             if (data.trackName) titleEl.textContent = data.trackName;
             if (data.artistName) artistEl.textContent = data.artistName;
-            if (false) {
-            }
         } else {
             titleEl.textContent = `${title} — not_found`;
             artistEl.textContent = '';
@@ -121,35 +112,26 @@ function downloadSong(e, title, artist) {
     if (btn) setTimeout(() => btn.classList.remove('loading'), 3000);
 }
 
-// --- Search ---
-let searchTimeout = null;
-
-document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('searchInput');
-    if (input) {
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') searchSongs();
-        });
-        input.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                if (input.value.trim().length >= 2) searchSongs();
-            }, 500);
-        });
-    }
-});
-
+// --- Shared card builder ---
 function escapeAttr(str) {
     return str.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function createResultCard(song) {
+function createResultCard(song, opts = {}) {
     const card = document.createElement('div');
     card.className = 'search-result-card';
 
     const duration = song.duration ? `${Math.floor(song.duration / 60)}:${String(song.duration % 60).padStart(2, '0')}` : '';
 
     card.ondblclick = (e) => playSong(e, song.title, song.artist);
+
+    // Show rank if available (genre charts)
+    if (song.rank) {
+        const rankDiv = document.createElement('div');
+        rankDiv.className = 'song-rank';
+        rankDiv.textContent = String(song.rank).padStart(3, '0');
+        card.appendChild(rankDiv);
+    }
 
     const info = document.createElement('div');
     info.className = 'song-info';
@@ -164,18 +146,18 @@ function createResultCard(song) {
     artistDiv.textContent = song.artist;
     info.appendChild(artistDiv);
 
-    if (song.source === 'lyrics') {
-        const srcDiv = document.createElement('div');
-        srcDiv.className = 'song-source';
-        srcDiv.textContent = '[lyrics_match]';
-        info.appendChild(srcDiv);
-    }
-
-    if (song.snippet) {
+    if (opts.showSnippet && song.snippet) {
         const snippetDiv = document.createElement('div');
         snippetDiv.className = 'song-snippet';
         snippetDiv.textContent = `"${song.snippet.replace(/\n/g, ' / ')}"`;
         info.appendChild(snippetDiv);
+    }
+
+    if (opts.showSource && song.source === 'lyrics') {
+        const srcDiv = document.createElement('div');
+        srcDiv.className = 'song-source';
+        srcDiv.textContent = '[lyrics_match]';
+        info.appendChild(srcDiv);
     }
 
     if (duration) {
@@ -205,6 +187,9 @@ function createResultCard(song) {
     return card;
 }
 
+// --- Search (iTunes catalog) ---
+let searchTimeout = null;
+
 async function searchSongs() {
     const input = document.getElementById('searchInput');
     const results = document.getElementById('searchResults');
@@ -217,13 +202,12 @@ async function searchSongs() {
 
     const loading = document.createElement('div');
     loading.className = 'search-loading';
-    loading.textContent = 'Recherche en cours...';
+    loading.textContent = 'searching catalog...';
     results.replaceChildren(loading);
 
     try {
         const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=20`);
         const data = await resp.json();
-
         results.replaceChildren();
 
         if (!data.results || data.results.length === 0) {
@@ -246,34 +230,133 @@ async function searchSongs() {
     }
 }
 
-// --- Cover loading ---
-async function loadCoverForCard(card) {
-    const placeholder = card.querySelector('.cover-placeholder');
-    if (!placeholder) return;
-    const title = card.querySelector('.song-title')?.textContent || '';
-    const artist = card.querySelector('.song-artist')?.textContent || '';
-    if (!title) return;
-    const q = encodeURIComponent(`${title} ${artist}`.trim());
+// --- Lyrics search (Genius) ---
+let lyricsTimeout = null;
+
+async function searchLyrics() {
+    const input = document.getElementById('lyricsInput');
+    const results = document.getElementById('lyricsResults');
+    const q = input.value.trim();
+
+    if (q.length < 2) {
+        results.replaceChildren();
+        return;
+    }
+
+    const loading = document.createElement('div');
+    loading.className = 'search-loading';
+    loading.textContent = 'scanning lyrics...';
+    results.replaceChildren(loading);
+
     try {
-        const resp = await fetch(`/api/artwork?q=${q}`);
+        const resp = await fetch(`/api/lyrics?q=${encodeURIComponent(q)}&limit=20`);
         const data = await resp.json();
-        if (data.artworkUrl) {
-            const img = document.createElement('img');
-            img.src = data.artworkUrl;
-            img.alt = title;
-            img.loading = 'lazy';
-            placeholder.replaceWith(img);
+        results.replaceChildren();
+
+        if (!data.results || data.results.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'search-empty';
+            empty.textContent = 'no lyrics match found.';
+            results.appendChild(empty);
+            return;
         }
-    } catch (e) {}
+
+        data.results.forEach(song => {
+            results.appendChild(createResultCard(song, { showSnippet: true, showSource: true }));
+        });
+    } catch (e) {
+        results.replaceChildren();
+        const err = document.createElement('div');
+        err.className = 'search-empty';
+        err.textContent = 'error: lyrics search failed.';
+        results.appendChild(err);
+    }
 }
 
-(async function loadCovers() {
-    const cards = document.querySelectorAll('.song-card');
-    for (const card of cards) {
-        if (card.style.display === 'none') continue;
-        await loadCoverForCard(card);
+// --- Genre search (iTunes) ---
+let activeGenre = null;
+
+async function searchGenre(genre) {
+    const results = document.getElementById('genreResults');
+    const activeEl = document.getElementById('genreActive');
+
+    // Toggle active button
+    document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+    if (activeGenre === genre) {
+        activeGenre = null;
+        activeEl.textContent = '';
+        results.replaceChildren();
+        return;
     }
-})();
+    activeGenre = genre;
+
+    // Highlight clicked button
+    document.querySelectorAll('.genre-btn').forEach(b => {
+        if (b.textContent === genre) b.classList.add('active');
+    });
+
+    activeEl.textContent = `>_ top_50: ${genre}`;
+
+    const loading = document.createElement('div');
+    loading.className = 'search-loading';
+    loading.textContent = `loading ${genre}...`;
+    results.replaceChildren(loading);
+
+    try {
+        const resp = await fetch(`/api/genre?genre=${encodeURIComponent(genre)}&limit=30`);
+        const data = await resp.json();
+        results.replaceChildren();
+
+        if (!data.results || data.results.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'search-empty';
+            empty.textContent = `no ${genre} results.`;
+            results.appendChild(empty);
+            return;
+        }
+
+        data.results.forEach(song => {
+            results.appendChild(createResultCard(song));
+        });
+    } catch (e) {
+        results.replaceChildren();
+        const err = document.createElement('div');
+        err.className = 'search-empty';
+        err.textContent = 'error: genre search failed.';
+        results.appendChild(err);
+    }
+}
+
+// --- Input event listeners ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Search tab
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') searchSongs();
+        });
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (searchInput.value.trim().length >= 2) searchSongs();
+            }, 500);
+        });
+    }
+
+    // Lyrics tab
+    const lyricsInput = document.getElementById('lyricsInput');
+    if (lyricsInput) {
+        lyricsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') searchLyrics();
+        });
+        lyricsInput.addEventListener('input', () => {
+            clearTimeout(lyricsTimeout);
+            lyricsTimeout = setTimeout(() => {
+                if (lyricsInput.value.trim().length >= 2) searchLyrics();
+            }, 500);
+        });
+    }
+});
 
 // Auto-reload every 5 minutes
 setInterval(() => {

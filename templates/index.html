@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DL</title>
-    <link rel="stylesheet" href="/static/style.css?v=6">
+    <link rel="stylesheet" href="/static/style.css?v=7">
 </head>
 <body>
     <header>
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('trending')">trending --list</button>
             <button class="tab-btn" onclick="switchTab('search')">search --query</button>
+            <button class="tab-btn" onclick="switchTab('lyrics')">lyrics --scan</button>
+            <button class="tab-btn" onclick="switchTab('genre')">genre --browse</button>
         </div>
     </header>
 
@@ -49,16 +51,56 @@
             {% endif %}
         </div>
 
-        <!-- Tab: Search -->
+        <!-- Tab: Search (iTunes catalog) -->
         <div class="tab-content" id="tabSearch">
             <div class="search-container">
                 <div class="search-bar">
                     <span class="search-prompt">&gt;_</span>
-                    <input type="text" id="searchInput" placeholder="search..." autocomplete="off">
+                    <input type="text" id="searchInput" placeholder="search title or artist..." autocomplete="off">
                     <button class="search-btn" id="searchBtn" onclick="searchSongs()">[ENTER]</button>
                 </div>
             </div>
             <div class="search-results" id="searchResults"></div>
+        </div>
+
+        <!-- Tab: Lyrics (Genius) -->
+        <div class="tab-content" id="tabLyrics">
+            <div class="search-container">
+                <div class="search-bar">
+                    <span class="search-prompt">&gt;_</span>
+                    <input type="text" id="lyricsInput" placeholder="search lyrics..." autocomplete="off">
+                    <button class="search-btn" onclick="searchLyrics()">[ENTER]</button>
+                </div>
+            </div>
+            <div class="search-results" id="lyricsResults"></div>
+        </div>
+
+        <!-- Tab: Genre -->
+        <div class="tab-content" id="tabGenre">
+            <div class="genre-grid" id="genreGrid">
+                <button class="genre-btn" onclick="searchGenre('hip-hop')">hip-hop</button>
+                <button class="genre-btn" onclick="searchGenre('trap')">trap</button>
+                <button class="genre-btn" onclick="searchGenre('r&b')">r&b</button>
+                <button class="genre-btn" onclick="searchGenre('pop')">pop</button>
+                <button class="genre-btn" onclick="searchGenre('drill')">drill</button>
+                <button class="genre-btn" onclick="searchGenre('afrobeat')">afrobeat</button>
+                <button class="genre-btn" onclick="searchGenre('latin')">latin</button>
+                <button class="genre-btn" onclick="searchGenre('reggaeton')">reggaeton</button>
+                <button class="genre-btn" onclick="searchGenre('rock')">rock</button>
+                <button class="genre-btn" onclick="searchGenre('electronic')">electronic</button>
+                <button class="genre-btn" onclick="searchGenre('house')">house</button>
+                <button class="genre-btn" onclick="searchGenre('jazz')">jazz</button>
+                <button class="genre-btn" onclick="searchGenre('soul')">soul</button>
+                <button class="genre-btn" onclick="searchGenre('country')">country</button>
+                <button class="genre-btn" onclick="searchGenre('phonk')">phonk</button>
+                <button class="genre-btn" onclick="searchGenre('lo-fi')">lo-fi</button>
+                <button class="genre-btn" onclick="searchGenre('classical')">classical</button>
+                <button class="genre-btn" onclick="searchGenre('metal')">metal</button>
+                <button class="genre-btn" onclick="searchGenre('dancehall')">dancehall</button>
+                <button class="genre-btn" onclick="searchGenre('ambient')">ambient</button>
+            </div>
+            <div class="genre-active" id="genreActive"></div>
+            <div class="search-results" id="genreResults"></div>
         </div>
     </main>
 
@@ -73,6 +115,6 @@
         <audio id="playerAudio" controls autoplay></audio>
     </div>
 
-    <script src="/static/script.js?v=6"></script>
+    <script src="/static/script.js?v=7"></script>
 </body>
 </html>

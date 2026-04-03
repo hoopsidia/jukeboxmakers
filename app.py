@@ -100,7 +100,7 @@ async def api_songs(
 
 @app.get("/api/search")
 async def api_search(q: str = Query(...), limit: int = Query(default=20, le=50)):
-    """Search songs via iTunes + Genius (lyrics). Merges results."""
+    """Search songs via iTunes catalog (title/artist)."""
     import httpx
     from urllib.parse import quote
 
@@ -108,74 +108,17 @@ async def api_search(q: str = Query(...), limit: int = Query(default=20, le=50))
         return {"results": []}
 
     results = []
-    seen = set()
-
     try:
         async with httpx.AsyncClient(timeout=8) as client:
-            # Search iTunes (title/artist)
-            itunes_req = client.get(
+            resp = await client.get(
                 f"https://itunes.apple.com/search?term={quote(q.strip())}&media=music&limit={limit}&entity=song"
             )
-            # Search Genius (lyrics + title)
-            genius_req = client.get(
-                f"https://genius.com/api/search/multi?q={quote(q.strip())}",
-                headers={
-                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                    "Accept": "application/json, text/plain, */*",
-                    "Referer": "https://genius.com/",
-                }
-            )
-
-            itunes_resp, genius_resp = await asyncio.gather(
-                itunes_req, genius_req, return_exceptions=True
-            )
-
-            # Parse Genius results first (lyrics matches)
-            if not isinstance(genius_resp, Exception) and genius_resp.status_code == 200:
-                try:
-                    gdata = genius_resp.json()
-                    sections = gdata.get("response", {}).get("sections", [])
-                    for section in sections:
-                        if section.get("type") in ("song", "lyric"):
-                            for hit in section.get("hits", []):
-                                r = hit.get("result", {})
-                                title = r.get("title", "")
-                                artist = r.get("primary_artist", {}).get("name", "") or r.get("artist_names", "")
-                                key = f"{title.lower()}_{artist.lower()}"
-                                if key not in seen and title:
-                                    seen.add(key)
-                                    source = "lyrics" if section.get("type") == "lyric" else "title"
-                                    # Extract lyrics snippet from highlights
-                                    snippet = ""
-                                    highlights = hit.get("highlights", [])
-                                    for hl in highlights:
-                                        val = hl.get("value") or hl.get("snippet") or ""
-                                        if val:
-                                            snippet = val.strip()
-                                            break
-                                    if not snippet:
-                                        snippet = r.get("lyrics_snippet", "")
-                                    results.append({
-                                        "title": title,
-                                        "artist": artist,
-                                        "album": "",
-                                        "artworkUrl": "",
-                                        "duration": 0,
-                                        "source": source,
-                                        "snippet": snippet,
-                                    })
-                except Exception:
-                    pass
-
-            # Parse iTunes results
-            if not isinstance(itunes_resp, Exception) and itunes_resp.status_code == 200:
-                data = itunes_resp.json()
+            if resp.status_code == 200:
+                data = resp.json()
                 for item in data.get("results", []):
                     title = item.get("trackName", "")
                     artist = item.get("artistName", "")
-                    key = f"{title.lower()}_{artist.lower()}"
-                    if key not in seen and title:
-                        seen.add(key)
+                    if title:
                         results.append({
                             "title": title,
                             "artist": artist,
@@ -184,10 +127,122 @@ async def api_search(q: str = Query(...), limit: int = Query(default=20, le=50))
                             "duration": item.get("trackTimeMillis", 0) // 1000,
                             "source": "catalog",
                         })
-            return {"results": results}
     except Exception as e:
         logger.warning(f"iTunes search failed: {e}")
+    return {"results": results}
+
+
+@app.get("/api/lyrics")
+async def api_lyrics(q: str = Query(...), limit: int = Query(default=20, le=50)):
+    """Search songs by lyrics via Genius."""
+    import httpx
+    from urllib.parse import quote
+
+    if not q or len(q.strip()) < 2:
         return {"results": []}
+
+    results = []
+    seen = set()
+    try:
+        async with httpx.AsyncClient(timeout=8) as client:
+            resp = await client.get(
+                f"https://genius.com/api/search/multi?q={quote(q.strip())}",
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "application/json, text/plain, */*",
+                    "Referer": "https://genius.com/",
+                }
+            )
+            if resp.status_code == 200:
+                gdata = resp.json()
+                sections = gdata.get("response", {}).get("sections", [])
+                for section in sections:
+                    if section.get("type") in ("song", "lyric"):
+                        for hit in section.get("hits", []):
+                            r = hit.get("result", {})
+                            title = r.get("title", "")
+                            artist = r.get("primary_artist", {}).get("name", "") or r.get("artist_names", "")
+                            key = f"{title.lower()}_{artist.lower()}"
+                            if key not in seen and title:
+                                seen.add(key)
+                                source = "lyrics" if section.get("type") == "lyric" else "title"
+                                snippet = ""
+                                highlights = hit.get("highlights", [])
+                                for hl in highlights:
+                                    val = hl.get("value") or ""
+                                    if val:
+                                        snippet = val.strip()
+                                        break
+                                if not snippet:
+                                    snippet = r.get("lyrics_snippet", "")
+                                results.append({
+                                    "title": title,
+                                    "artist": artist,
+                                    "album": "",
+                                    "artworkUrl": "",
+                                    "duration": 0,
+                                    "source": source,
+                                    "snippet": snippet,
+                                })
+                            if len(results) >= limit:
+                                break
+    except Exception as e:
+        logger.warning(f"Genius lyrics search failed: {e}")
+    return {"results": results}
+
+
+@app.get("/api/genre")
+async def api_genre(genre: str = Query(...), limit: int = Query(default=50, le=100)):
+    """Get top charts by genre via iTunes RSS feed."""
+    import httpx
+
+    if not genre or len(genre.strip()) < 2:
+        return {"results": []}
+
+    # iTunes genre IDs mapping
+    genre_ids = {
+        "hip-hop": 18, "trap": 18, "drill": 18,
+        "r&b": 15, "soul": 15,
+        "pop": 14,
+        "rock": 21, "metal": 21,
+        "electronic": 7, "house": 7, "ambient": 7,
+        "latin": 12, "reggaeton": 12,
+        "country": 6,
+        "jazz": 11,
+        "classical": 5,
+        "dancehall": 24,
+        "phonk": 18,
+        "lo-fi": 7,
+        "afrobeat": 15,
+    }
+
+    genre_id = genre_ids.get(genre.lower().strip(), 14)  # default to Pop
+
+    results = []
+    try:
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            resp = await client.get(
+                f"https://itunes.apple.com/us/rss/topsongs/limit={limit}/genre={genre_id}/json"
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                entries = data.get("feed", {}).get("entry", [])
+                for i, entry in enumerate(entries):
+                    title = entry.get("im:name", {}).get("label", "")
+                    artist = entry.get("im:artist", {}).get("label", "")
+                    if title:
+                        results.append({
+                            "title": title,
+                            "artist": artist,
+                            "album": entry.get("im:collection", {}).get("im:name", {}).get("label", ""),
+                            "artworkUrl": "",
+                            "duration": 0,
+                            "source": "chart",
+                            "rank": i + 1,
+                        })
+    except Exception as e:
+        logger.warning(f"Genre chart failed: {e}")
+    return {"results": results}
 
 
 def _clean_query(q: str) -> list[str]:
