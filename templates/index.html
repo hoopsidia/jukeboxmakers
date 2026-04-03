@@ -4,24 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JUKEBOXMAKERS</title>
-    <link rel="stylesheet" href="/static/style.css?v=4">
+    <link rel="stylesheet" href="/static/style.css?v=5">
 </head>
 <body>
     <header>
-        <div class="header-content">
-            <h1>JUKEBOXMAKERS</h1>
-            <div class="header-actions">
-                <span class="last-refresh" id="lastRefresh">
-                    Dernière mise à jour : {{ last_refresh or "jamais" }}
-                </span>
-                <button class="btn-refresh" id="btnRefresh" onclick="refreshData()">
-                    Actualiser
-                </button>
-            </div>
-        </div>
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('trending')">TRENDING</button>
-            <button class="tab-btn" onclick="switchTab('search')">RECHERCHE</button>
+            <button class="tab-btn active" onclick="switchTab('trending')">trending --list</button>
+            <button class="tab-btn" onclick="switchTab('search')">search --query</button>
         </div>
     </header>
 
@@ -31,48 +20,31 @@
             <div class="songs-grid" id="songsGrid">
                 {% for song in songs %}
                 <div class="song-card" style="{% if loop.index > 20 %}display:none{% endif %}" data-index="{{ loop.index }}" ondblclick="playSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')">
-                    <div class="song-rank">{{ loop.index }}</div>
-                    <div class="song-cover">
-                        {% if song.cover_url %}
-                        <img src="{{ song.cover_url }}" alt="{{ song.title }}" loading="lazy">
-                        {% else %}
-                        <div class="cover-placeholder"><img src="/static/logo-placeholder.png" alt="Logo"></div>
-                        {% endif %}
-                    </div>
+                    <div class="song-rank">{{ '%03d' | format(loop.index) }}</div>
                     <div class="song-info">
                         <div class="song-title">{{ song.title }}</div>
                         <div class="song-artist">{{ song.artist }}</div>
                     </div>
                     <div class="song-links">
-                        <button class="link-btn play" title="Ecouter" onclick="playSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                <path d="M8 5v14l11-7z"/>
-                            </svg>
-                        </button>
-                        <button class="link-btn download" title="Telecharger" onclick="downloadSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                            </svg>
-                        </button>
+                        <button class="link-btn play" title="Play" onclick="playSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')"></button>
+                        <button class="link-btn download" title="Download" onclick="downloadSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')"></button>
                     </div>
                 </div>
                 {% endfor %}
 
                 {% if not songs %}
                 <div class="empty-state">
-                    <p>Chargement des sons en cours...</p>
-                    <p>Le premier scan peut prendre quelques minutes.</p>
-                    <button class="btn-refresh" onclick="location.reload()">Recharger</button>
+                    <p>loading sounds...</p>
+                    <p>first scan may take a few minutes.</p>
+                    <button class="btn-refresh" onclick="location.reload()">[RELOAD]</button>
                 </div>
                 {% endif %}
             </div>
 
             {% if songs | length > 20 %}
             <div class="show-more-container" id="showMoreContainer">
-                <button class="btn-show-more" id="btnShowMore" onclick="showMore()">
-                    Voir plus
-                </button>
-                <span class="show-more-count" id="showMoreCount">20 / {{ songs | length }}</span>
+                <button class="btn-show-more" id="btnShowMore" onclick="showMore()">[LOAD_MORE]</button>
+                <span class="show-more-count" id="showMoreCount">20/{{ songs | length }}</span>
             </div>
             {% endif %}
         </div>
@@ -81,13 +53,9 @@
         <div class="tab-content" id="tabSearch">
             <div class="search-container">
                 <div class="search-bar">
-                    <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                    </svg>
-                    <input type="text" id="searchInput" placeholder="Rechercher un son..." autocomplete="off">
-                    <button class="search-btn" id="searchBtn" onclick="searchSongs()">
-                        RECHERCHER
-                    </button>
+                    <span class="search-prompt">&gt;_</span>
+                    <input type="text" id="searchInput" placeholder="search..." autocomplete="off">
+                    <button class="search-btn" id="searchBtn" onclick="searchSongs()">[ENTER]</button>
                 </div>
             </div>
             <div class="search-results" id="searchResults"></div>
@@ -96,16 +64,15 @@
 
     <div class="player-bar" id="playerBar">
         <div class="player-info">
-            <img id="playerArt" class="player-art" src="" alt="">
             <div class="player-text">
-                <span id="playerTitle">Aucun son</span>
+                <span id="playerTitle">---</span>
                 <span id="playerArtist"></span>
             </div>
-            <button class="player-close" onclick="closePlayer()">&times;</button>
+            <button class="player-close" onclick="closePlayer()">[X]</button>
         </div>
         <audio id="playerAudio" controls autoplay></audio>
     </div>
 
-    <script src="/static/script.js?v=4"></script>
+    <script src="/static/script.js?v=5"></script>
 </body>
 </html>

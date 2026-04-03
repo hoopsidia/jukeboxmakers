@@ -62,11 +62,9 @@ async function playSong(e, title, artist) {
     const audio = document.getElementById('playerAudio');
     const titleEl = document.getElementById('playerTitle');
     const artistEl = document.getElementById('playerArtist');
-    const artEl = document.getElementById('playerArt');
 
     titleEl.textContent = title;
     artistEl.textContent = artist;
-    artEl.src = '';
     bar.classList.add('active');
     document.body.classList.add('player-open');
 
@@ -74,7 +72,7 @@ async function playSong(e, title, artist) {
     if (e && e.target) e.target.closest('.song-card, .search-result-card')?.classList.add('playing');
 
     const query = encodeURIComponent(`${title} ${artist}`.trim());
-    titleEl.textContent = `${title} — chargement...`;
+    titleEl.textContent = `${title} — loading...`;
     try {
         const resp = await fetch(`/api/preview?q=${query}`);
         const data = await resp.json();
@@ -83,23 +81,15 @@ async function playSong(e, title, artist) {
             audio.play();
             if (data.trackName) titleEl.textContent = data.trackName;
             if (data.artistName) artistEl.textContent = data.artistName;
-            const cardImg = e?.target?.closest('.song-card, .search-result-card')?.querySelector('.song-cover img, .search-result-art');
-            if (cardImg && cardImg.src) {
-                artEl.src = cardImg.src;
-            } else {
-                try {
-                    const artResp = await fetch(`/api/artwork?q=${query}`);
-                    const artData = await artResp.json();
-                    if (artData.artworkUrl) artEl.src = artData.artworkUrl;
-                } catch (e) {}
+            if (false) {
             }
         } else {
-            titleEl.textContent = `${title} — introuvable`;
+            titleEl.textContent = `${title} — not_found`;
             artistEl.textContent = '';
             audio.src = '';
         }
     } catch (e) {
-        titleEl.textContent = `${title} — erreur`;
+        titleEl.textContent = `${title} — error`;
         artistEl.textContent = '';
     }
 }
@@ -157,17 +147,9 @@ function createResultCard(song) {
     const card = document.createElement('div');
     card.className = 'search-result-card';
 
-    const safeTitle = escapeAttr(song.title);
-    const safeArtist = escapeAttr(song.artist);
     const duration = song.duration ? `${Math.floor(song.duration / 60)}:${String(song.duration % 60).padStart(2, '0')}` : '';
 
     card.ondblclick = (e) => playSong(e, song.title, song.artist);
-
-    const img = document.createElement('img');
-    img.className = 'search-result-art';
-    img.src = song.artworkUrl || '/static/logo-placeholder.png';
-    img.alt = song.title;
-    card.appendChild(img);
 
     const info = document.createElement('div');
     info.className = 'song-info';
@@ -179,7 +161,7 @@ function createResultCard(song) {
 
     const artistDiv = document.createElement('div');
     artistDiv.className = 'song-artist';
-    artistDiv.textContent = song.artist + (song.album ? ' — ' + song.album : '');
+    artistDiv.textContent = song.artist;
     info.appendChild(artistDiv);
 
     if (duration) {
@@ -195,16 +177,14 @@ function createResultCard(song) {
 
     const playBtn = document.createElement('button');
     playBtn.className = 'link-btn play';
-    playBtn.title = 'Ecouter';
+    playBtn.title = 'Play';
     playBtn.onclick = (e) => playSong(e, song.title, song.artist);
-    playBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
     links.appendChild(playBtn);
 
     const dlBtn = document.createElement('button');
     dlBtn.className = 'link-btn download';
-    dlBtn.title = 'Telecharger';
+    dlBtn.title = 'Download';
     dlBtn.onclick = (e) => downloadSong(e, song.title, song.artist);
-    dlBtn.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
     links.appendChild(dlBtn);
 
     card.appendChild(links);
@@ -235,7 +215,7 @@ async function searchSongs() {
         if (!data.results || data.results.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'search-empty';
-            empty.textContent = 'Aucun résultat';
+            empty.textContent = 'no results found.';
             results.appendChild(empty);
             return;
         }
@@ -247,7 +227,7 @@ async function searchSongs() {
         results.replaceChildren();
         const err = document.createElement('div');
         err.className = 'search-empty';
-        err.textContent = 'Erreur de recherche';
+        err.textContent = 'error: search failed.';
         results.appendChild(err);
     }
 }

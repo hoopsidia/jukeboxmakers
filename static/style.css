@@ -1,37 +1,4 @@
-@font-face {
-    font-family: 'Proxima Nova';
-    src: url('/static/fonts/FontsFree-Net-Proxima-Nova-Light.otf') format('opentype');
-    font-weight: 300;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Proxima Nova';
-    src: url('/static/fonts/ProximaNova-Regular.otf') format('opentype');
-    font-weight: 400;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Proxima Nova';
-    src: url('/static/fonts/ProximaNova-Bold.otf') format('opentype');
-    font-weight: 700;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Proxima Nova';
-    src: url('/static/fonts/FontsFree-Net-Proxima-Nova-Xbold.otf') format('opentype');
-    font-weight: 800;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Proxima Nova';
-    src: url('/static/fonts/ProximaNova-Black.otf') format('opentype');
-    font-weight: 900;
-    font-style: normal;
-}
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
 
 * {
     margin: 0;
@@ -40,109 +7,67 @@
 }
 
 body {
-    font-family: 'Proxima Nova', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #000;
-    color: #fff;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
+    background: #0a0a0a;
+    color: #999;
     min-height: 100vh;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 12px 16px;
+}
+
+::selection {
+    background: #fff;
+    color: #000;
 }
 
 header {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 20px 24px 12px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    max-width: 960px;
+    margin: 0 auto 8px;
+    padding: 0;
+    background: none;
+    border: none;
 }
 
 .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    margin-bottom: 14px;
+    display: none;
 }
 
-h1 {
-    font-size: 22px;
-    font-weight: 900;
-    color: #fff;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.last-refresh {
-    font-size: 12px;
-    font-weight: 300;
-    color: rgba(255, 255, 255, 0.35);
-}
-
-.btn-refresh {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    padding: 8px 18px;
-    border-radius: 40px;
-    font-family: 'Proxima Nova', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-refresh:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.25);
-}
-
-.btn-refresh:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-/* Tabs */
 .tabs {
     display: flex;
-    gap: 4px;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding-bottom: 4px;
+    gap: 0;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #1a1a1a;
+    padding-bottom: 8px;
 }
 
 .tab-btn {
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 8px 24px;
-    border-radius: 30px;
-    font-family: 'Proxima Nova', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1px;
+    background: none;
+    border: none;
+    padding: 2px 0;
+    margin-right: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #333;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: color 0.15s;
+}
+
+.tab-btn::before {
+    content: '$ ';
+    color: #444;
 }
 
 .tab-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.7);
+    color: #888;
 }
 
 .tab-btn.active {
-    background: rgba(255, 255, 255, 0.12);
     color: #fff;
-    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.tab-btn.active::before {
+    color: #666;
 }
 
 .tab-content {
@@ -155,29 +80,30 @@ h1 {
 
 /* Search */
 .search-container {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .search-bar {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 10px 16px;
-    transition: border-color 0.3s;
-}
-
-.search-bar:focus-within {
-    border-color: rgba(255, 255, 255, 0.2);
+    gap: 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #1a1a1a;
+    padding: 0;
 }
 
 .search-icon {
-    color: rgba(255, 255, 255, 0.3);
+    display: none;
+}
+
+.search-prompt {
+    color: #444;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
     flex-shrink: 0;
+    user-select: none;
+    margin-right: 4px;
 }
 
 #searchInput {
@@ -186,309 +112,208 @@ h1 {
     border: none;
     outline: none;
     color: #fff;
-    font-family: 'Proxima Nova', sans-serif;
-    font-size: 15px;
-    font-weight: 400;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 6px 0;
+    caret-color: #fff;
 }
 
 #searchInput::placeholder {
-    color: rgba(255, 255, 255, 0.25);
+    color: #222;
 }
 
 .search-btn {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 30px;
-    font-family: 'Proxima Nova', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.3s;
-    flex-shrink: 0;
-}
-
-.search-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
+    display: none;
 }
 
 .search-results {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
 }
 
 .search-result-card {
     display: flex;
     align-items: center;
-    gap: 14px;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
-    padding: 12px 16px;
-    transition: all 0.3s ease;
+    gap: 10px;
+    padding: 3px 4px;
+    transition: background 0.1s;
     cursor: pointer;
 }
 
 .search-result-card:hover {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.12);
-}
-
-.search-result-card:hover .song-rank {
-    color: #fff;
+    background: #141414;
 }
 
 .search-result-card.playing {
-    border-color: rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.08);
+    background: #141414;
+}
+
+.search-result-card.playing .song-title {
+    color: #fff;
 }
 
 .search-result-art {
-    width: 52px;
-    height: 52px;
-    border-radius: 10px;
-    object-fit: cover;
-    flex-shrink: 0;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.song-duration {
-    font-size: 11px;
-    font-weight: 300;
-    color: rgba(255, 255, 255, 0.25);
-    margin-top: 2px;
+    display: none;
 }
 
 .search-loading,
 .search-empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 14px;
-    font-weight: 300;
+    padding: 8px 0;
+    color: #333;
+    font-size: 13px;
 }
 
 main {
-    max-width: 1200px;
+    max-width: 960px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 0;
 }
 
 .songs-grid {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0;
 }
 
 .song-card {
     display: flex;
     align-items: center;
-    gap: 14px;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
-    padding: 12px 16px;
-    transition: all 0.3s ease;
+    gap: 10px;
+    padding: 3px 4px;
+    transition: background 0.1s;
     cursor: pointer;
 }
 
 .song-card:hover {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.03);
+    background: #141414;
 }
 
 .song-card:hover .song-rank {
-    color: #fff;
+    color: #666;
 }
 
 .song-rank {
-    font-size: 16px;
-    font-weight: 900;
-    color: rgba(255, 255, 255, 0.2);
-    min-width: 28px;
-    text-align: center;
+    font-size: 13px;
+    font-weight: 400;
+    color: #2a2a2a;
+    min-width: 36px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.song-rank::after {
+    content: '_';
+    color: #1a1a1a;
 }
 
 .song-cover {
-    width: 52px;
-    height: 52px;
-    border-radius: 10px;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.song-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.cover-placeholder {
-    width: 100%;
-    height: 100%;
-    background: #000;
-    padding: 8px;
-}
-
-.cover-placeholder img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    display: none;
 }
 
 .song-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    overflow: hidden;
 }
 
 .song-title {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #fff;
-    text-transform: uppercase;
+    color: #ccc;
+    text-transform: lowercase;
 }
 
 .song-artist {
+    font-size: 13px;
+    color: #3a3a3a;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.song-artist::before {
+    content: '_ ';
+    color: #1a1a1a;
+}
+
+.song-duration {
     font-size: 12px;
-    font-weight: 300;
-    color: rgba(255, 255, 255, 0.4);
-    margin-top: 2px;
-}
-
-.song-stats {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 4px;
-}
-
-.usage-count {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.25);
-}
-
-.trend {
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.trend-up { color: #fff; }
-.trend-down { color: rgba(255, 255, 255, 0.3); }
-.trend-stable { color: rgba(255, 255, 255, 0.2); }
-.trend-new {
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 1px 6px;
-    border-radius: 4px;
+    color: #2a2a2a;
+    flex-shrink: 0;
 }
 
 .song-links {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     flex-shrink: 0;
 }
 
 .link-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    background: none;
+    border: none;
+    color: #333;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 2px 4px;
+    cursor: pointer;
+    transition: color 0.15s;
+    text-decoration: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-decoration: none;
-    transition: all 0.25s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    width: auto;
+    height: auto;
 }
 
 .link-btn:hover {
-    transform: scale(1.1);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.06);
-}
-
-.link-btn.play {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    cursor: pointer;
+    transform: none;
+    box-shadow: none;
 }
 
-.link-btn.play:hover {
-    background: rgba(255, 255, 255, 0.2);
+.link-btn svg {
+    display: none;
 }
 
-.link-btn.download {
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    color: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    cursor: pointer;
+.link-btn.play::after {
+    content: '[play]';
 }
 
-.link-btn.download:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
+.link-btn.download::after {
+    content: '[dl]';
 }
 
 .link-btn.download.loading {
     opacity: 0.3;
     pointer-events: none;
-    animation: pulse 1.5s infinite;
+    animation: blink 1s infinite;
 }
 
-@keyframes pulse {
+@keyframes blink {
     0%, 100% { opacity: 0.3; }
     50% { opacity: 0.1; }
 }
 
-.link-btn.tiktok {
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.7);
+.song-card.playing {
+    background: #141414;
 }
 
-.link-btn.spotify {
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.link-btn.youtube {
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.link-btn.tiktok:hover,
-.link-btn.spotify:hover,
-.link-btn.youtube:hover {
-    background: rgba(255, 255, 255, 0.15);
+.song-card.playing .song-title {
     color: #fff;
 }
 
-.song-card.playing {
-    border-color: rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 40px rgba(255, 255, 255, 0.04), inset 0 0 30px rgba(255, 255, 255, 0.02);
+.song-card.playing .song-rank {
+    color: #fff;
 }
 
-.song-card.playing .song-rank {
+.song-card.playing .song-rank::after {
     color: #fff;
 }
 
@@ -498,10 +323,8 @@ main {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(10, 10, 10, 0.7);
-    backdrop-filter: blur(50px) saturate(150%);
-    -webkit-backdrop-filter: blur(50px) saturate(150%);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0a0a0a;
+    border-top: 1px solid #1a1a1a;
     z-index: 200;
     display: none;
     flex-direction: column;
@@ -514,30 +337,36 @@ main {
 .player-info {
     display: flex;
     align-items: center;
-    padding: 10px 16px;
-    gap: 12px;
+    padding: 6px 16px;
+    gap: 0;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.player-info::before {
+    content: '>_now_playing:';
+    color: #444;
+    font-size: 12px;
+    margin-right: 8px;
+    flex-shrink: 0;
 }
 
 .player-art {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    object-fit: cover;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    flex-shrink: 0;
+    display: none;
 }
 
 .player-text {
     flex: 1;
     min-width: 0;
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
+    gap: 8px;
 }
 
 #playerTitle {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 500;
     color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -545,20 +374,20 @@ main {
 }
 
 #playerArtist {
-    font-size: 11px;
-    font-weight: 300;
-    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    color: #333;
 }
 
 .player-close {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 22px;
+    color: #333;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
     cursor: pointer;
-    padding: 0 4px;
+    padding: 2px 6px;
     flex-shrink: 0;
-    transition: color 0.2s;
+    transition: color 0.15s;
 }
 
 .player-close:hover {
@@ -567,95 +396,68 @@ main {
 
 #playerAudio {
     width: 100%;
-    height: 36px;
+    height: 28px;
     outline: none;
-    filter: invert(1) brightness(0.8);
+    filter: invert(1) brightness(0.4);
 }
 
-body.player-open main {
-    padding-bottom: 140px;
+body.player-open {
+    padding-bottom: 90px;
 }
 
 .empty-state {
-    text-align: center;
-    padding: 80px 20px;
-    color: rgba(255, 255, 255, 0.3);
+    padding: 20px 0;
+    color: #333;
+    font-size: 13px;
 }
 
 .empty-state p {
-    margin-bottom: 12px;
-    font-size: 15px;
-    font-weight: 300;
+    margin-bottom: 4px;
+}
+
+.empty-state p::before {
+    content: '>_ ';
+    color: #222;
 }
 
 .show-more-container {
-    text-align: center;
-    padding: 24px;
+    padding: 8px 0;
 }
 
 .btn-show-more {
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 14px 48px;
-    border-radius: 40px;
-    font-family: 'Proxima Nova', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
+    background: none;
+    color: #333;
+    border: none;
+    padding: 2px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
     cursor: pointer;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    transition: all 0.3s ease;
+    transition: color 0.15s;
 }
 
 .btn-show-more:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.05);
+    color: #fff;
 }
 
 .show-more-count {
-    display: block;
-    margin-top: 8px;
-    font-size: 12px;
-    font-weight: 300;
-    color: rgba(255, 255, 255, 0.25);
+    display: inline;
+    margin-left: 8px;
+    font-size: 13px;
+    color: #222;
 }
 
 @media (max-width: 600px) {
-    header {
-        padding: 16px 12px 10px;
+    body {
+        padding: 8px 10px;
+        font-size: 12px;
     }
 
-    .header-content {
+    .song-info {
         flex-direction: column;
-        gap: 10px;
-        align-items: flex-start;
+        gap: 0;
     }
 
-    main {
-        padding: 16px 12px;
-    }
-
-    .song-card {
-        padding: 10px 12px;
-        gap: 10px;
-    }
-
-    .song-cover {
-        width: 44px;
-        height: 44px;
-    }
-
-    .song-links {
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .link-btn {
-        width: 30px;
-        height: 30px;
+    .song-artist::before {
+        content: '';
     }
 }
