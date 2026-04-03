@@ -797,7 +797,7 @@ async function generateSfx() {
         const resp = await fetch('/api/sfx', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt, duration }),
+            body: JSON.stringify({ prompt, duration, count: 5 }),
         });
         const data = await resp.json();
 
@@ -806,63 +806,76 @@ async function generateSfx() {
             return;
         }
 
+        const variants = data.results || [];
+        if (variants.length === 0) {
+            errorEl.textContent = '>_ error: no results generated';
+            return;
+        }
+
+        // Create a batch container
         sfxCounter++;
+        const batch = document.createElement('div');
+        batch.className = 'sfx-batch';
 
-        // Create SFX card
-        const card = document.createElement('div');
-        card.className = 'sfx-card';
+        const batchHeader = document.createElement('div');
+        batchHeader.className = 'sfx-batch-header';
+        batchHeader.textContent = `//_ ${String(sfxCounter).padStart(3, '0')} "${prompt}" — ${duration}s — ${variants.length} variants`;
+        batch.appendChild(batchHeader);
 
-        const num = document.createElement('div');
-        num.className = 'sfx-num';
-        num.textContent = String(sfxCounter).padStart(3, '0') + '_';
-        card.appendChild(num);
+        variants.forEach((v, i) => {
+            if (v.error) return;
 
-        const info = document.createElement('div');
-        info.className = 'sfx-info';
+            const card = document.createElement('div');
+            card.className = 'sfx-card';
 
-        const promptDiv = document.createElement('div');
-        promptDiv.className = 'sfx-prompt';
-        promptDiv.textContent = prompt;
-        info.appendChild(promptDiv);
+            const num = document.createElement('div');
+            num.className = 'sfx-num';
+            num.textContent = `${String(sfxCounter).padStart(3, '0')}.${i + 1}`;
+            card.appendChild(num);
 
-        const meta = document.createElement('div');
-        meta.className = 'sfx-meta';
-        meta.textContent = `${duration}s${data.cached ? ' [cached]' : ''}`;
-        info.appendChild(meta);
+            const info = document.createElement('div');
+            info.className = 'sfx-info';
 
-        const audio = document.createElement('audio');
-        audio.className = 'sfx-audio';
-        audio.src = data.audioUrl;
-        audio.controls = true;
-        audio.autoplay = true;
-        info.appendChild(audio);
+            const meta = document.createElement('div');
+            meta.className = 'sfx-meta';
+            meta.textContent = `variant_${i + 1}${v.cached ? ' [cached]' : ''}`;
+            info.appendChild(meta);
 
-        card.appendChild(info);
+            const audio = document.createElement('audio');
+            audio.className = 'sfx-audio';
+            audio.src = v.audioUrl;
+            audio.controls = true;
+            if (i === 0) audio.autoplay = true;
+            info.appendChild(audio);
 
-        const actions = document.createElement('div');
-        actions.className = 'song-links';
+            card.appendChild(info);
 
-        const playBtn = document.createElement('button');
-        playBtn.className = 'link-btn play';
-        playBtn.onclick = () => { audio.currentTime = 0; audio.play(); };
-        actions.appendChild(playBtn);
+            const actions = document.createElement('div');
+            actions.className = 'song-links';
 
-        const dlBtn = document.createElement('button');
-        dlBtn.className = 'link-btn download';
-        dlBtn.onclick = () => {
-            const a = document.createElement('a');
-            a.href = data.audioUrl;
-            a.download = `sfx_${prompt.replace(/[^a-z0-9]/gi, '_').substring(0, 30)}.mp3`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        };
-        actions.appendChild(dlBtn);
+            const playBtn = document.createElement('button');
+            playBtn.className = 'link-btn play';
+            playBtn.onclick = () => { audio.currentTime = 0; audio.play(); };
+            actions.appendChild(playBtn);
 
-        card.appendChild(actions);
+            const dlBtn = document.createElement('button');
+            dlBtn.className = 'link-btn download';
+            dlBtn.onclick = () => {
+                const a = document.createElement('a');
+                a.href = v.audioUrl;
+                a.download = `sfx_${prompt.replace(/[^a-z0-9]/gi, '_').substring(0, 30)}_v${i + 1}.mp3`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+            actions.appendChild(dlBtn);
 
-        // Prepend (newest first)
-        results.insertBefore(card, results.firstChild);
+            card.appendChild(actions);
+            batch.appendChild(card);
+        });
+
+        // Prepend batch (newest first)
+        results.insertBefore(batch, results.firstChild);
 
         // Clear input for next prompt
         input.value = '';

@@ -895,6 +895,18 @@ body.player-open {
     gap: 0;
 }
 
+.sfx-batch {
+    border-bottom: 1px solid #1a1a1a;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.sfx-batch-header {
+    font-size: 11px;
+    color: #333;
+    padding: 4px 4px 2px;
+}
+
 .sfx-card {
     display: flex;
     align-items: flex-start;

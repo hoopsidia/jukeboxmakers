@@ -407,12 +407,13 @@ async def api_download(q: str = Query(...), filename: str = Query("song")):
 
 @app.post("/api/sfx")
 async def api_sfx(request: Request):
-    """Generate sound effects via ElevenLabs API."""
+    """Generate 5 sound effect variations via ElevenLabs API."""
     import httpx
 
     body = await request.json()
     prompt = body.get("prompt", "").strip()
     duration = body.get("duration", 2.0)
+    count = min(body.get("count", 5), 5)
 
     if not prompt:
         return {"error": "no prompt provided"}
@@ -421,51 +422,61 @@ async def api_sfx(request: Request):
     if not api_key:
         return {"error": "ELEVENLABS_API_KEY not set"}
 
-    # Check cache first
-    cache_key = hashlib.md5(f"{prompt}_{duration}".lower().encode()).hexdigest()
-    cached_path = os.path.join(AUDIO_DIR, f"sfx_{cache_key}.mp3")
-    if os.path.exists(cached_path):
-        return {
-            "audioUrl": f"/audio/sfx_{cache_key}.mp3",
-            "prompt": prompt,
-            "duration": duration,
-            "cached": True,
-        }
+    results = []
 
-    try:
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(
-                "https://api.elevenlabs.io/v1/sound-generation",
-                headers={
-                    "xi-api-key": api_key,
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "text": prompt,
-                    "duration_seconds": float(duration),
-                    "prompt_influence": 0.3,
-                },
-            )
+    # Generate multiple variations
+    async def gen_one(idx):
+        cache_key = hashlib.md5(f"{prompt}_{duration}_{idx}".lower().encode()).hexdigest()
+        cached_path = os.path.join(AUDIO_DIR, f"sfx_{cache_key}.mp3")
 
-            if resp.status_code != 200:
-                error_text = resp.text[:200] if resp.text else f"status {resp.status_code}"
-                logger.warning(f"ElevenLabs SFX error: {resp.status_code} {error_text}")
-                return {"error": f"elevenlabs error: {error_text}"}
-
-            # Save the MP3 binary
-            with open(cached_path, "wb") as f:
-                f.write(resp.content)
-
+        if os.path.exists(cached_path):
             return {
                 "audioUrl": f"/audio/sfx_{cache_key}.mp3",
                 "prompt": prompt,
                 "duration": duration,
-                "cached": False,
+                "variant": idx + 1,
+                "cached": True,
             }
 
-    except Exception as e:
-        logger.warning(f"SFX generation failed: {e}")
-        return {"error": str(e)}
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                resp = await client.post(
+                    "https://api.elevenlabs.io/v1/sound-generation",
+                    headers={
+                        "xi-api-key": api_key,
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "text": prompt,
+                        "duration_seconds": float(duration),
+                        "prompt_influence": 0.3,
+                    },
+                )
+
+                if resp.status_code != 200:
+                    error_text = resp.text[:200] if resp.text else f"status {resp.status_code}"
+                    logger.warning(f"ElevenLabs SFX error: {resp.status_code} {error_text}")
+                    return {"error": f"elevenlabs error: {error_text}", "variant": idx + 1}
+
+                with open(cached_path, "wb") as f:
+                    f.write(resp.content)
+
+                return {
+                    "audioUrl": f"/audio/sfx_{cache_key}.mp3",
+                    "prompt": prompt,
+                    "duration": duration,
+                    "variant": idx + 1,
+                    "cached": False,
+                }
+        except Exception as e:
+            logger.warning(f"SFX generation {idx} failed: {e}")
+            return {"error": str(e), "variant": idx + 1}
+
+    # Run all generations in parallel
+    tasks = [gen_one(i) for i in range(count)]
+    results = await asyncio.gather(*tasks)
+
+    return {"results": [r for r in results if r], "prompt": prompt}
 
 
 @app.post("/api/vibe")
