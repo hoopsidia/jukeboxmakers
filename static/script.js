@@ -31,7 +31,7 @@ function switchTab(tab) {
         document.getElementById('sfxInput').focus();
     } else if (tab === 'voice') {
         document.getElementById('tabVoice').classList.add('active');
-        document.getElementById('voiceDesc').focus();
+        document.getElementById('voiceScript').focus();
     }
 }
 
@@ -863,7 +863,7 @@ async function generateVoice() {
         const resp = await fetch('/api/voice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ voiceId, voiceDesc, script }),
+            body: JSON.stringify({ voiceId, voiceDesc, script, style: parseFloat(document.getElementById('voiceStyle').value) }),
         });
         const data = await resp.json();
 
@@ -925,7 +925,7 @@ async function generateVoice() {
         dlBtn.onclick = () => {
             const a = document.createElement('a');
             a.href = data.audioUrl;
-            a.download = `voice_${voiceDesc.replace(/[^a-z0-9]/gi, '_').substring(0, 20)}.mp3`;
+            a.download = `voice_${(voiceId || voiceDesc).replace(/[^a-z0-9]/gi, '_').substring(0, 20)}.mp3`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

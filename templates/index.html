@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DL</title>
-    <link rel="stylesheet" href="/static/style.css?v=15">
+    <link rel="stylesheet" href="/static/style.css?v=16">
 </head>
 <body>
     <header>
@@ -179,6 +179,9 @@
                     </div>
                 </div>
                 <div class="voice-controls">
+                    <label class="sfx-duration-label">style_</label>
+                    <input type="range" id="voiceStyle" min="0" max="1" step="0.1" value="0.5" class="sfx-slider" oninput="document.getElementById('voiceStyleVal').textContent = ['neutral','calm','balanced','expressive','dramatic'][Math.round(this.value*4)]">
+                    <span class="sfx-duration-val" id="voiceStyleVal">balanced</span>
                     <button class="vibe-submit" id="voiceGenBtn" onclick="generateVoice()">[GENERATE_VOICE]</button>
                 </div>
                 <div class="sfx-loading" id="voiceLoading">
@@ -224,6 +227,6 @@
         <audio id="playerAudio" controls autoplay></audio>
     </div>
 
-    <script src="/static/script.js?v=15"></script>
+    <script src="/static/script.js?v=16"></script>
 </body>
 </html>

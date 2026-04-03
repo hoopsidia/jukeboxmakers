@@ -431,8 +431,9 @@ async def api_voice(request: Request):
         return {"error": "ELEVENLABS_API_KEY not set"}
 
     # Cache key
+    style = body.get("style", 0.5)
     voice_key = resolved_voice_id or voice_desc or "default"
-    cache_key = hashlib.md5(f"{voice_key}_{script}".lower().encode()).hexdigest()
+    cache_key = hashlib.md5(f"{voice_key}_{script}_{style}".lower().encode()).hexdigest()
     cached_path = os.path.join(AUDIO_DIR, f"voice_{cache_key}.mp3")
     if os.path.exists(cached_path):
         return {
@@ -446,6 +447,9 @@ async def api_voice(request: Request):
         async with httpx.AsyncClient(timeout=60) as client:
             if resolved_voice_id:
                 # Direct TTS with known voice ID
+                # Get style/intonation from request
+                style = body.get("style", 0.5)
+
                 resp = await client.post(
                     f"https://api.elevenlabs.io/v1/text-to-speech/{resolved_voice_id}",
                     headers={
@@ -457,8 +461,10 @@ async def api_voice(request: Request):
                         "text": script,
                         "model_id": "eleven_multilingual_v2",
                         "voice_settings": {
-                            "stability": 0.5,
+                            "stability": max(0.0, 1.0 - float(style)),
                             "similarity_boost": 0.75,
+                            "style": float(style),
+                            "use_speaker_boost": True,
                         },
                     },
                 )
