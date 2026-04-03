@@ -24,7 +24,7 @@
     <main>
         <div class="songs-grid" id="songsGrid">
             {% for song in songs %}
-            <div class="song-card" style="{% if loop.index > 20 %}display:none{% endif %}" data-index="{{ loop.index }}">
+            <div class="song-card" style="{% if loop.index > 20 %}display:none{% endif %}" data-index="{{ loop.index }}" ondblclick="playSong(event, '{{ song.title | e }}', '{{ song.artist | e }}')">
                 <div class="song-rank">{{ loop.index }}</div>
                 <div class="song-cover">
                     {% if song.cover_url %}

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+audio_cache/
+songs.db
+.env
+*.egg-info/
+dist/
+build/
+.claude/
+node_modules/
+preview-proxy.mjs

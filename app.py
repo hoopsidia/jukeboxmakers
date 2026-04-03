@@ -115,11 +115,12 @@ def _clean_query(q: str) -> list[str]:
 
 
 def _yt_download(query: str):
-    """Download full song from YouTube via yt-dlp. Returns file info."""
+    """Download full song from YouTube via yt-dlp. Tries multiple search variations."""
     from yt_dlp import YoutubeDL
     import re
 
     clean = re.sub(r'\([^)]*\)', '', query)
+    clean = re.sub(r'\[[^\]]*\]', '', clean)
     clean = re.sub(r'\b\d{4,}\b', '', clean)
     clean = ' '.join(clean.split()).strip()
     file_key = hashlib.md5(clean.lower().encode()).hexdigest()
@@ -130,6 +131,16 @@ def _yt_download(query: str):
         if os.path.exists(f"{out_path}.{ext}"):
             return {'key': file_key, 'ext': ext, 'file': f"{out_path}.{ext}"}
 
+    # Build search variations: full query, title+artist, title only, with "audio"
+    words = clean.split()
+    search_queries = [clean]
+    if len(words) > 2:
+        search_queries.append(clean + " audio")
+        search_queries.append(' '.join(words[:2]))
+    if len(words) > 3:
+        search_queries.append(' '.join(words[:3]) + " official audio")
+    search_queries.append(clean + " lyrics")
+
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -138,24 +149,31 @@ def _yt_download(query: str):
         'default_search': 'ytsearch1',
         'outtmpl': out_path + '.%(ext)s',
     }
-    try:
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(clean, download=True)
-            if info and 'entries' in info:
-                info = info['entries'][0] if info['entries'] else None
-            if info:
-                ext = info.get('ext', 'm4a')
-                return {
-                    'key': file_key,
-                    'ext': ext,
-                    'file': f"{out_path}.{ext}",
-                    'title': info.get('title', ''),
-                    'uploader': info.get('uploader', ''),
-                    'thumbnail': info.get('thumbnail', ''),
-                    'duration': info.get('duration', 0),
-                }
-    except Exception as e:
-        logger.warning(f"yt-dlp failed for '{clean}': {e}")
+
+    for sq in search_queries:
+        try:
+            with YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(sq, download=True)
+                if info and 'entries' in info:
+                    info = info['entries'][0] if info['entries'] else None
+                if info:
+                    ext = info.get('ext', 'm4a')
+                    filepath = f"{out_path}.{ext}"
+                    if os.path.exists(filepath):
+                        return {
+                            'key': file_key,
+                            'ext': ext,
+                            'file': filepath,
+                            'title': info.get('title', ''),
+                            'uploader': info.get('uploader', ''),
+                            'thumbnail': info.get('thumbnail', ''),
+                            'duration': info.get('duration', 0),
+                        }
+        except Exception as e:
+            logger.warning(f"yt-dlp attempt failed for '{sq}': {e}")
+            continue
+
+    logger.warning(f"All search attempts failed for '{clean}'")
     return None
 
 
