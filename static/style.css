@@ -106,7 +106,7 @@ header {
     margin-right: 4px;
 }
 
-#searchInput {
+.search-bar input[type="text"] {
     flex: 1;
     background: none;
     border: none;
@@ -116,9 +116,11 @@ header {
     font-size: 13px;
     padding: 6px 0;
     caret-color: #fff;
+    -webkit-appearance: none;
+    border-radius: 0;
 }
 
-#searchInput::placeholder {
+.search-bar input[type="text"]::placeholder {
     color: #222;
 }
 
