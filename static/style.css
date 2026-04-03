@@ -830,6 +830,32 @@ body.player-open {
     margin-top: 8px;
 }
 
+/* Voice TTS */
+.voice-section {
+    margin-bottom: 12px;
+}
+
+.voice-field {
+    margin-bottom: 8px;
+}
+
+.voice-label {
+    font-size: 11px;
+    color: #333;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.voice-select-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.voice-controls {
+    padding: 4px 0;
+}
+
 /* SFX Generator */
 .sfx-controls {
     display: flex;

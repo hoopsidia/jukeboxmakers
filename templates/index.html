@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DL</title>
-    <link rel="stylesheet" href="/static/style.css?v=14">
+    <link rel="stylesheet" href="/static/style.css?v=15">
 </head>
 <body>
     <header>
@@ -15,6 +15,7 @@
             <button class="tab-btn" onclick="switchTab('genre')">genre --browse</button>
             <button class="tab-btn" onclick="switchTab('vibe')">vibe --ai</button>
             <button class="tab-btn" onclick="switchTab('sfx')">sfx --generate</button>
+            <button class="tab-btn" onclick="switchTab('voice')">voice --tts</button>
         </div>
     </header>
 
@@ -151,6 +152,43 @@
                 </div>
             </div>
         </div>
+        <!-- Tab: Voice TTS -->
+        <div class="tab-content" id="tabVoice">
+            <div class="voice-section">
+                <div class="voice-field">
+                    <label class="voice-label">//_ voice:</label>
+                    <div class="voice-select-row">
+                        <select class="vibe-select" id="voiceSelect" onchange="toggleVoiceDesc()">
+                            <option value="valentin">valentin (clone)</option>
+                            <option value="custom">custom_voice (describe)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="voice-field" id="voiceDescField" style="display:none">
+                    <label class="voice-label">//_ voice_description:</label>
+                    <div class="search-bar">
+                        <span class="search-prompt">&gt;_</span>
+                        <input type="text" id="voiceDesc" placeholder="describe voice... (deep male narrator, soft female whisper...)" autocomplete="off">
+                    </div>
+                </div>
+                <div class="voice-field">
+                    <label class="voice-label">//_ script:</label>
+                    <div class="search-bar vibe-bar">
+                        <span class="search-prompt">&gt;_</span>
+                        <textarea id="voiceScript" placeholder="type or paste your script here..." rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="voice-controls">
+                    <button class="vibe-submit" id="voiceGenBtn" onclick="generateVoice()">[GENERATE_VOICE]</button>
+                </div>
+                <div class="sfx-loading" id="voiceLoading">
+                    <span>>_ generating voice...</span>
+                </div>
+                <div class="sfx-error" id="voiceError"></div>
+            </div>
+            <div class="sfx-results" id="voiceResults"></div>
+        </div>
+
         <!-- Tab: SFX Generator -->
         <div class="tab-content" id="tabSfx">
             <div class="search-container">
@@ -186,6 +224,6 @@
         <audio id="playerAudio" controls autoplay></audio>
     </div>
 
-    <script src="/static/script.js?v=14"></script>
+    <script src="/static/script.js?v=15"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@ let visibleCount = 40;
 const BATCH_SIZE = 20;
 
 // --- Tabs ---
-const TAB_IDS = ['trending', 'search', 'lyrics', 'genre', 'vibe', 'sfx'];
+const TAB_IDS = ['trending', 'search', 'lyrics', 'genre', 'vibe', 'sfx', 'voice'];
 
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -29,6 +29,9 @@ function switchTab(tab) {
     } else if (tab === 'sfx') {
         document.getElementById('tabSfx').classList.add('active');
         document.getElementById('sfxInput').focus();
+    } else if (tab === 'voice') {
+        document.getElementById('tabVoice').classList.add('active');
+        document.getElementById('voiceDesc').focus();
     }
 }
 
@@ -816,6 +819,132 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VOICE TTS (ElevenLabs)
+// ═══════════════════════════════════════════════════════════════════════════════
+let voiceGenerating = false;
+let voiceCounter = 0;
+
+function toggleVoiceDesc() {
+    const select = document.getElementById('voiceSelect');
+    const descField = document.getElementById('voiceDescField');
+    descField.style.display = select.value === 'custom' ? 'block' : 'none';
+}
+
+async function generateVoice() {
+    if (voiceGenerating) return;
+
+    const select = document.getElementById('voiceSelect');
+    const descInput = document.getElementById('voiceDesc');
+    const scriptInput = document.getElementById('voiceScript');
+    const voiceId = select.value !== 'custom' ? select.value : '';
+    const voiceDesc = select.value === 'custom' ? descInput.value.trim() : '';
+    const script = scriptInput.value.trim();
+    const errorEl = document.getElementById('voiceError');
+    const loadingEl = document.getElementById('voiceLoading');
+    const results = document.getElementById('voiceResults');
+    const btn = document.getElementById('voiceGenBtn');
+
+    if (select.value === 'custom' && !voiceDesc) {
+        errorEl.textContent = '>_ error: describe the voice first';
+        return;
+    }
+    if (!script) {
+        errorEl.textContent = '>_ error: write a script first';
+        return;
+    }
+    errorEl.textContent = '';
+    voiceGenerating = true;
+    loadingEl.style.display = 'block';
+    btn.disabled = true;
+
+    try {
+        const resp = await fetch('/api/voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ voiceId, voiceDesc, script }),
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+            errorEl.textContent = `>_ error: ${data.error}`;
+            return;
+        }
+
+        voiceCounter++;
+
+        const card = document.createElement('div');
+        card.className = 'sfx-card';
+
+        const num = document.createElement('div');
+        num.className = 'sfx-num';
+        num.textContent = String(voiceCounter).padStart(3, '0') + '_';
+        card.appendChild(num);
+
+        const info = document.createElement('div');
+        info.className = 'sfx-info';
+
+        const descDiv = document.createElement('div');
+        descDiv.className = 'sfx-prompt';
+        descDiv.textContent = voiceId || voiceDesc;
+        info.appendChild(descDiv);
+
+        const scriptDiv = document.createElement('div');
+        scriptDiv.className = 'sfx-meta';
+        const preview = script.length > 80 ? script.substring(0, 80) + '...' : script;
+        scriptDiv.textContent = `"${preview}"`;
+        info.appendChild(scriptDiv);
+
+        if (data.cached) {
+            const cachedDiv = document.createElement('div');
+            cachedDiv.className = 'sfx-meta';
+            cachedDiv.textContent = '[cached]';
+            info.appendChild(cachedDiv);
+        }
+
+        const audio = document.createElement('audio');
+        audio.className = 'sfx-audio';
+        audio.src = data.audioUrl;
+        audio.controls = true;
+        audio.autoplay = true;
+        info.appendChild(audio);
+
+        card.appendChild(info);
+
+        const actions = document.createElement('div');
+        actions.className = 'song-links';
+
+        const playBtn = document.createElement('button');
+        playBtn.className = 'link-btn play';
+        playBtn.onclick = () => { audio.currentTime = 0; audio.play(); };
+        actions.appendChild(playBtn);
+
+        const dlBtn = document.createElement('button');
+        dlBtn.className = 'link-btn download';
+        dlBtn.onclick = () => {
+            const a = document.createElement('a');
+            a.href = data.audioUrl;
+            a.download = `voice_${voiceDesc.replace(/[^a-z0-9]/gi, '_').substring(0, 20)}.mp3`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+        actions.appendChild(dlBtn);
+
+        card.appendChild(actions);
+
+        // Prepend (newest first, never clear history)
+        results.insertBefore(card, results.firstChild);
+
+    } catch (e) {
+        errorEl.textContent = `>_ error: ${e.message}`;
+    } finally {
+        voiceGenerating = false;
+        loadingEl.style.display = 'none';
+        btn.disabled = false;
+    }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SFX GENERATOR (ElevenLabs)

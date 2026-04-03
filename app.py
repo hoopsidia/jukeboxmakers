@@ -405,6 +405,119 @@ async def api_download(q: str = Query(...), filename: str = Query("song")):
     return JSONResponse({"error": "not found"}, status_code=404)
 
 
+@app.post("/api/voice")
+async def api_voice(request: Request):
+    """Generate voice-over via ElevenLabs Text-to-Speech with voice design."""
+    import httpx
+
+    body = await request.json()
+    voice_desc = body.get("voiceDesc", "").strip()
+    voice_id = body.get("voiceId", "").strip()
+    script = body.get("script", "").strip()
+
+    if not script:
+        return {"error": "no script provided"}
+
+    # Known voice IDs
+    VOICE_MAP = {
+        "valentin": "qhRRShcIhxtvobu7E7kH",
+    }
+
+    # Resolve voice
+    resolved_voice_id = VOICE_MAP.get(voice_id, voice_id) if voice_id else None
+
+    api_key = os.environ.get("ELEVENLABS_API_KEY", "")
+    if not api_key:
+        return {"error": "ELEVENLABS_API_KEY not set"}
+
+    # Cache key
+    voice_key = resolved_voice_id or voice_desc or "default"
+    cache_key = hashlib.md5(f"{voice_key}_{script}".lower().encode()).hexdigest()
+    cached_path = os.path.join(AUDIO_DIR, f"voice_{cache_key}.mp3")
+    if os.path.exists(cached_path):
+        return {
+            "audioUrl": f"/audio/voice_{cache_key}.mp3",
+            "voiceDesc": voice_desc or voice_id,
+            "script": script,
+            "cached": True,
+        }
+
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            if resolved_voice_id:
+                # Direct TTS with known voice ID
+                resp = await client.post(
+                    f"https://api.elevenlabs.io/v1/text-to-speech/{resolved_voice_id}",
+                    headers={
+                        "xi-api-key": api_key,
+                        "Content-Type": "application/json",
+                        "Accept": "audio/mpeg",
+                    },
+                    json={
+                        "text": script,
+                        "model_id": "eleven_multilingual_v2",
+                        "voice_settings": {
+                            "stability": 0.5,
+                            "similarity_boost": 0.75,
+                        },
+                    },
+                )
+                if resp.status_code != 200:
+                    error_text = resp.text[:200]
+                    logger.warning(f"ElevenLabs TTS error: {resp.status_code} {error_text}")
+                    return {"error": f"tts error: {error_text}"}
+
+                with open(cached_path, "wb") as f:
+                    f.write(resp.content)
+
+                return {
+                    "audioUrl": f"/audio/voice_{cache_key}.mp3",
+                    "voiceDesc": voice_id,
+                    "script": script,
+                    "cached": False,
+                }
+
+            elif voice_desc:
+                # Voice design from description
+                resp = await client.post(
+                    "https://api.elevenlabs.io/v1/text-to-voice/create-previews",
+                    headers={
+                        "xi-api-key": api_key,
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "voice_description": voice_desc,
+                        "text": script,
+                    },
+                )
+
+                if resp.status_code == 200:
+                    data = resp.json()
+                    previews = data.get("previews", [])
+                    if previews:
+                        audio_b64 = previews[0].get("audio_base_64", "")
+                        if audio_b64:
+                            import base64
+                            audio_bytes = base64.b64decode(audio_b64)
+                            with open(cached_path, "wb") as f:
+                                f.write(audio_bytes)
+                            return {
+                                "audioUrl": f"/audio/voice_{cache_key}.mp3",
+                                "voiceDesc": voice_desc,
+                                "script": script,
+                                "cached": False,
+                            }
+
+                return {"error": "voice design failed — try a different description"}
+
+            else:
+                return {"error": "no voice selected"}
+
+    except Exception as e:
+        logger.warning(f"Voice generation failed: {e}")
+        return {"error": str(e)}
+
+
 @app.post("/api/sfx")
 async def api_sfx(request: Request):
     """Generate 5 sound effect variations via ElevenLabs API."""
