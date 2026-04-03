@@ -523,7 +523,7 @@ function searchPlatform(platform, query) {
 
 async function searchVibe() {
     const vibe = document.getElementById('vibeInput').value.trim();
-    const videoType = document.getElementById('videoType').value;
+    const videoType = 'sport edits';
     const errorEl = document.getElementById('vibeError');
     const loadingEl = document.getElementById('vibeLoading');
     const btn = document.getElementById('vibeSearchBtn');
