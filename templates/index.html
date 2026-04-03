@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DL</title>
-    <link rel="stylesheet" href="/static/style.css?v=7">
+    <link rel="stylesheet" href="/static/style.css?v=8">
 </head>
 <body>
     <header>
@@ -13,6 +13,7 @@
             <button class="tab-btn" onclick="switchTab('search')">search --query</button>
             <button class="tab-btn" onclick="switchTab('lyrics')">lyrics --scan</button>
             <button class="tab-btn" onclick="switchTab('genre')">genre --browse</button>
+            <button class="tab-btn" onclick="switchTab('vibe')">vibe --ai</button>
         </div>
     </header>
 
@@ -98,9 +99,76 @@
                 <button class="genre-btn" onclick="searchGenre('metal')">metal</button>
                 <button class="genre-btn" onclick="searchGenre('dancehall')">dancehall</button>
                 <button class="genre-btn" onclick="searchGenre('ambient')">ambient</button>
+                <button class="genre-btn" onclick="searchGenre('rap fr')">rap fr</button>
             </div>
             <div class="genre-active" id="genreActive"></div>
             <div class="search-results" id="genreResults"></div>
+            <div class="genre-load-more" id="genreLoadMore" style="display:none">
+                <button class="btn-show-more" onclick="loadMoreGenre()">[LOAD_MORE]</button>
+                <span class="show-more-count" id="genreLoadCount"></span>
+            </div>
+        </div>
+        <!-- Tab: Vibe AI -->
+        <div class="tab-content" id="tabVibe">
+            <div class="vibe-section">
+                <div class="search-container">
+                    <div class="search-bar vibe-bar">
+                        <span class="search-prompt">&gt;_</span>
+                        <textarea id="vibeInput" placeholder="describe vibe... (trap sombre, phonk agressif, orchestral épique...)" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="vibe-tags-row" id="vibeQuickTags">
+                    <button class="vibe-tag-btn" onclick="appendVibeTag('trap sombre agressif paroles violentes')">trap_aggressive</button>
+                    <button class="vibe-tag-btn" onclick="appendVibeTag('drill UK menaçant rues underground')">uk_drill</button>
+                    <button class="vibe-tag-btn" onclick="appendVibeTag('phonk drift aggressive TikTok viral')">phonk_viral</button>
+                    <button class="vibe-tag-btn" onclick="appendVibeTag('hip hop boom bap old school NY')">boom_bap</button>
+                    <button class="vibe-tag-btn" onclick="appendVibeTag('électro dark cinématique intense drops')">dark_electro</button>
+                    <button class="vibe-tag-btn" onclick="appendVibeTag('orchestral épique tension montée cinéma')">epic_orchestral</button>
+                    <button class="vibe-tag-btn" onclick="appendVibeTag('rap français instrus lourdes paroles violentes')">rap_fr</button>
+                    <button class="vibe-tag-btn" onclick="appendVibeTag('bass music grimy underground festival')">grimy_bass</button>
+                </div>
+
+                <div class="vibe-controls">
+                    <select class="vibe-select" id="videoType">
+                        <option value="basketball highlights">basketball_highlights</option>
+                        <option value="streetball lifestyle">streetball_lifestyle</option>
+                        <option value="montage sportif intensite">sport_montage</option>
+                        <option value="skate video">skate_video</option>
+                        <option value="cinematic vlog">cinematic_vlog</option>
+                        <option value="travel content">travel_content</option>
+                        <option value="freestyle flow">freestyle_cypher</option>
+                    </select>
+                    <button class="vibe-submit" id="vibeSearchBtn" onclick="searchVibe()">[FIND_TRACKS]</button>
+                </div>
+
+                <div class="vibe-error" id="vibeError"></div>
+            </div>
+
+            <div class="vibe-loading" id="vibeLoading">
+                <span>scanning vibes...</span>
+            </div>
+
+            <div class="vibe-results" id="vibeResults">
+                <div class="vibe-analysis-box" id="vibeAnalysisBox" style="display:none">
+                    <div class="vibe-analysis-label">//_ vibe_analysis:</div>
+                    <div class="vibe-analysis-text" id="vibeAnalysisText"></div>
+                    <div class="vibe-analysis-context" id="vibeContextText"></div>
+                    <div class="vibe-analysis-tags" id="vibeAnalysisTags"></div>
+                </div>
+
+                <div class="vibe-tracks" id="vibeTracksGrid"></div>
+
+                <div class="vibe-load-more" id="vibeLoadMore" style="display:none">
+                    <button class="vibe-submit" onclick="loadMoreVibe()">[+10_TRACKS]</button>
+                    <span class="vibe-load-count" id="vibeLoadCount"></span>
+                </div>
+
+                <div class="vibe-keywords" id="vibeKeywords" style="display:none">
+                    <div class="vibe-analysis-label">//_ search_keywords:</div>
+                    <div class="vibe-keywords-grid" id="vibeKeywordsGrid"></div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -110,11 +178,12 @@
                 <span id="playerTitle">---</span>
                 <span id="playerArtist"></span>
             </div>
+            <button class="player-dl" onclick="downloadCurrentSong()">[dl]</button>
             <button class="player-close" onclick="closePlayer()">[X]</button>
         </div>
         <audio id="playerAudio" controls autoplay></audio>
     </div>
 
-    <script src="/static/script.js?v=7"></script>
+    <script src="/static/script.js?v=8"></script>
 </body>
 </html>

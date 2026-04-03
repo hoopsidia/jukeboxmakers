@@ -2,7 +2,7 @@ let visibleCount = 40;
 const BATCH_SIZE = 20;
 
 // --- Tabs ---
-const TAB_IDS = ['trending', 'search', 'lyrics', 'genre'];
+const TAB_IDS = ['trending', 'search', 'lyrics', 'genre', 'vibe'];
 
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -23,6 +23,9 @@ function switchTab(tab) {
         document.getElementById('lyricsInput').focus();
     } else if (tab === 'genre') {
         document.getElementById('tabGenre').classList.add('active');
+    } else if (tab === 'vibe') {
+        document.getElementById('tabVibe').classList.add('active');
+        document.getElementById('vibeInput').focus();
     }
 }
 
@@ -50,19 +53,25 @@ function showMore() {
 }
 
 // --- Player ---
+let currentPlayerTitle = '';
+let currentPlayerArtist = '';
+
 async function playSong(e, title, artist) {
     const bar = document.getElementById('playerBar');
     const audio = document.getElementById('playerAudio');
     const titleEl = document.getElementById('playerTitle');
     const artistEl = document.getElementById('playerArtist');
 
+    currentPlayerTitle = title;
+    currentPlayerArtist = artist;
+
     titleEl.textContent = title;
     artistEl.textContent = artist;
     bar.classList.add('active');
     document.body.classList.add('player-open');
 
-    document.querySelectorAll('.song-card, .search-result-card').forEach(c => c.classList.remove('playing'));
-    if (e && e.target) e.target.closest('.song-card, .search-result-card')?.classList.add('playing');
+    document.querySelectorAll('.song-card, .search-result-card, .vibe-track-card').forEach(c => c.classList.remove('playing'));
+    if (e && e.target) e.target.closest('.song-card, .search-result-card, .vibe-track-card')?.classList.add('playing');
 
     const query = encodeURIComponent(`${title} ${artist}`.trim());
     titleEl.textContent = `${title} — loading...`;
@@ -72,8 +81,8 @@ async function playSong(e, title, artist) {
         if (data.previewUrl) {
             audio.src = data.previewUrl;
             audio.play();
-            if (data.trackName) titleEl.textContent = data.trackName;
-            if (data.artistName) artistEl.textContent = data.artistName;
+            if (data.trackName) { titleEl.textContent = data.trackName; currentPlayerTitle = data.trackName; }
+            if (data.artistName) { artistEl.textContent = data.artistName; currentPlayerArtist = data.artistName; }
         } else {
             titleEl.textContent = `${title} — not_found`;
             artistEl.textContent = '';
@@ -92,7 +101,19 @@ function closePlayer() {
     audio.src = '';
     bar.classList.remove('active');
     document.body.classList.remove('player-open');
-    document.querySelectorAll('.song-card, .search-result-card').forEach(c => c.classList.remove('playing'));
+    document.querySelectorAll('.song-card, .search-result-card, .vibe-track-card').forEach(c => c.classList.remove('playing'));
+}
+
+function downloadCurrentSong() {
+    if (!currentPlayerTitle) return;
+    const query = encodeURIComponent(`${currentPlayerTitle} ${currentPlayerArtist}`.trim());
+    const filename = encodeURIComponent(`${currentPlayerTitle} - ${currentPlayerArtist}`.trim());
+    const a = document.createElement('a');
+    a.href = `/api/download?q=${query}&filename=${filename}`;
+    a.download = `${currentPlayerTitle} - ${currentPlayerArtist}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 
 // --- Download ---
@@ -125,7 +146,6 @@ function createResultCard(song, opts = {}) {
 
     card.ondblclick = (e) => playSong(e, song.title, song.artist);
 
-    // Show rank if available (genre charts)
     if (song.rank) {
         const rankDiv = document.createElement('div');
         rankDiv.className = 'song-rank';
@@ -273,24 +293,27 @@ async function searchLyrics() {
     }
 }
 
-// --- Genre search (iTunes) ---
+// --- Genre search (iTunes charts) ---
 let activeGenre = null;
+let genreCurrentLimit = 50;
 
 async function searchGenre(genre) {
     const results = document.getElementById('genreResults');
     const activeEl = document.getElementById('genreActive');
+    const loadMoreEl = document.getElementById('genreLoadMore');
 
-    // Toggle active button
     document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+
     if (activeGenre === genre) {
         activeGenre = null;
         activeEl.textContent = '';
         results.replaceChildren();
+        loadMoreEl.style.display = 'none';
         return;
     }
     activeGenre = genre;
+    genreCurrentLimit = 50;
 
-    // Highlight clicked button
     document.querySelectorAll('.genre-btn').forEach(b => {
         if (b.textContent === genre) b.classList.add('active');
     });
@@ -303,7 +326,7 @@ async function searchGenre(genre) {
     results.replaceChildren(loading);
 
     try {
-        const resp = await fetch(`/api/genre?genre=${encodeURIComponent(genre)}&limit=30`);
+        const resp = await fetch(`/api/genre?genre=${encodeURIComponent(genre)}&limit=50`);
         const data = await resp.json();
         results.replaceChildren();
 
@@ -312,24 +335,326 @@ async function searchGenre(genre) {
             empty.className = 'search-empty';
             empty.textContent = `no ${genre} results.`;
             results.appendChild(empty);
+            loadMoreEl.style.display = 'none';
             return;
         }
 
         data.results.forEach(song => {
             results.appendChild(createResultCard(song));
         });
+
+        // Show load more only if we got exactly 50 (more might be available)
+        if (data.results.length >= 50) {
+            loadMoreEl.style.display = 'block';
+            document.getElementById('genreLoadCount').textContent = `${data.results.length} loaded`;
+        } else {
+            loadMoreEl.style.display = 'none';
+        }
     } catch (e) {
         results.replaceChildren();
         const err = document.createElement('div');
         err.className = 'search-empty';
         err.textContent = 'error: genre search failed.';
         results.appendChild(err);
+        loadMoreEl.style.display = 'none';
+    }
+}
+
+async function loadMoreGenre() {
+    if (!activeGenre) return;
+    genreCurrentLimit = Math.min(genreCurrentLimit + 50, 200);
+
+    const results = document.getElementById('genreResults');
+    const activeEl = document.getElementById('genreActive');
+    activeEl.textContent = `>_ top_${genreCurrentLimit}: ${activeGenre}`;
+
+    const loading = document.createElement('div');
+    loading.className = 'search-loading';
+    loading.textContent = `loading top ${genreCurrentLimit}...`;
+    results.appendChild(loading);
+
+    try {
+        const resp = await fetch(`/api/genre?genre=${encodeURIComponent(activeGenre)}&limit=${genreCurrentLimit}`);
+        const data = await resp.json();
+        results.replaceChildren();
+
+        data.results.forEach(song => {
+            results.appendChild(createResultCard(song));
+        });
+
+        const count = data.results.length;
+        document.getElementById('genreLoadCount').textContent = `${count} loaded`;
+        // Hide if we got less than requested (no more available) or reached 200
+        if (count < genreCurrentLimit || genreCurrentLimit >= 200) {
+            document.getElementById('genreLoadMore').style.display = 'none';
+        }
+    } catch (e) {
+        // keep existing results
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIBE AI (TRACKFINDER)
+// ═══════════════════════════════════════════════════════════════════════════════
+let vibeState = {
+    totalLoaded: 0,
+    currentOffset: 0,
+    currentVibe: '',
+    currentVideoType: '',
+    allTracks: [],
+    isLoading: false,
+};
+
+function appendVibeTag(text) {
+    const input = document.getElementById('vibeInput');
+    const cur = input.value.trim();
+    input.value = cur ? cur + ', ' + text : text;
+    input.focus();
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderVibeTrack(track, index) {
+    const card = document.createElement('div');
+    card.className = 'vibe-track-card';
+    card.ondblclick = (e) => playSong(e, track.name, track.artist);
+
+    const num = document.createElement('div');
+    num.className = 'vibe-track-num';
+    num.textContent = String(index + 1).padStart(2, '0');
+    card.appendChild(num);
+
+    const info = document.createElement('div');
+    info.className = 'vibe-track-info';
+
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'song-title';
+    titleDiv.textContent = track.name;
+    info.appendChild(titleDiv);
+
+    const artistDiv = document.createElement('div');
+    artistDiv.className = 'song-artist';
+    artistDiv.textContent = track.artist;
+    info.appendChild(artistDiv);
+
+    if (track.usedBy) {
+        const usedBy = document.createElement('div');
+        usedBy.className = 'vibe-track-desc';
+        usedBy.textContent = `↗ ${track.usedBy}`;
+        info.appendChild(usedBy);
+    }
+
+    if (track.description) {
+        const desc = document.createElement('div');
+        desc.className = 'vibe-track-desc';
+        desc.textContent = track.description;
+        info.appendChild(desc);
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'vibe-track-meta';
+    if (track.bpm) {
+        const bpm = document.createElement('span');
+        bpm.textContent = `${track.bpm}bpm`;
+        meta.appendChild(bpm);
+    }
+    if (track.mood) {
+        const mood = document.createElement('span');
+        mood.textContent = track.mood.toLowerCase();
+        meta.appendChild(mood);
+    }
+    if (track.energy !== undefined) {
+        const energy = document.createElement('span');
+        energy.textContent = `energy:${track.energy}`;
+        meta.appendChild(energy);
+    }
+    if (track.trendScore !== undefined) {
+        const trend = document.createElement('span');
+        trend.textContent = `trend:${track.trendScore}`;
+        meta.appendChild(trend);
+    }
+    info.appendChild(meta);
+
+    // Platform search links
+    if (track.platforms && track.searchQuery) {
+        const platforms = document.createElement('div');
+        platforms.className = 'vibe-track-platforms';
+        track.platforms.forEach(p => {
+            const btn = document.createElement('button');
+            btn.textContent = `[${p.toLowerCase()}]`;
+            btn.onclick = () => searchPlatform(p, track.searchQuery);
+            platforms.appendChild(btn);
+        });
+        info.appendChild(platforms);
+    }
+
+    card.appendChild(info);
+
+    // Play/download buttons
+    const actions = document.createElement('div');
+    actions.className = 'song-links';
+    const playBtn = document.createElement('button');
+    playBtn.className = 'link-btn play';
+    playBtn.onclick = (e) => playSong(e, track.name, track.artist);
+    actions.appendChild(playBtn);
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'link-btn download';
+    dlBtn.onclick = (e) => downloadSong(e, track.name, track.artist);
+    actions.appendChild(dlBtn);
+    card.appendChild(actions);
+
+    return card;
+}
+
+function searchPlatform(platform, query) {
+    const urls = {
+        'Epidemic Sound': `https://www.epidemicsound.com/music/search/?term=${encodeURIComponent(query)}`,
+        'YouTube Music': `https://music.youtube.com/search?q=${encodeURIComponent(query)}`,
+        'Spotify': `https://open.spotify.com/search/${encodeURIComponent(query)}`,
+        'SoundCloud': `https://soundcloud.com/search?q=${encodeURIComponent(query)}`,
+        'YouTube': `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+        'Artlist': `https://artlist.io/music#search=${encodeURIComponent(query)}`,
+    };
+    window.open(urls[platform] || `https://www.google.com/search?q=${encodeURIComponent(query + ' ' + platform)}`, '_blank');
+}
+
+async function searchVibe() {
+    const vibe = document.getElementById('vibeInput').value.trim();
+    const videoType = document.getElementById('videoType').value;
+    const errorEl = document.getElementById('vibeError');
+    const loadingEl = document.getElementById('vibeLoading');
+    const btn = document.getElementById('vibeSearchBtn');
+
+    if (!vibe) {
+        errorEl.textContent = '>_ error: describe a vibe first';
+        return;
+    }
+    errorEl.textContent = '';
+
+    // Reset state
+    vibeState = { totalLoaded: 0, currentOffset: 0, currentVibe: vibe, currentVideoType: videoType, allTracks: [], isLoading: true };
+
+    loadingEl.className = 'vibe-loading active';
+    btn.disabled = true;
+    document.getElementById('vibeTracksGrid').innerHTML = '';
+    document.getElementById('vibeAnalysisBox').style.display = 'none';
+    document.getElementById('vibeLoadMore').style.display = 'none';
+    document.getElementById('vibeKeywords').style.display = 'none';
+
+    try {
+        const resp = await fetch('/api/vibe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vibe, videoType, offset: 0, exclude: [] }),
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+            errorEl.textContent = `>_ error: ${data.error}`;
+            return;
+        }
+
+        // Analysis
+        if (data.vibeAnalysis) {
+            document.getElementById('vibeAnalysisText').textContent = data.vibeAnalysis;
+            document.getElementById('vibeContextText').textContent = data.trendContext || '';
+            const tagsEl = document.getElementById('vibeAnalysisTags');
+            tagsEl.innerHTML = '';
+            (data.vibeTags || []).forEach(tag => {
+                const s = document.createElement('span');
+                s.textContent = tag;
+                tagsEl.appendChild(s);
+            });
+            document.getElementById('vibeAnalysisBox').style.display = 'block';
+        }
+
+        // Tracks
+        const tracks = data.tracks || [];
+        const grid = document.getElementById('vibeTracksGrid');
+        tracks.forEach((t, i) => {
+            grid.appendChild(renderVibeTrack(t, i));
+        });
+        vibeState.allTracks = [...tracks];
+        vibeState.totalLoaded = tracks.length;
+        vibeState.currentOffset = tracks.length;
+
+        // Load more
+        document.getElementById('vibeLoadMore').style.display = 'block';
+        document.getElementById('vibeLoadCount').textContent = `${vibeState.totalLoaded} tracks`;
+
+        // Keywords
+        if (data.searchKeywords?.length) {
+            const kwGrid = document.getElementById('vibeKeywordsGrid');
+            kwGrid.innerHTML = '';
+            data.searchKeywords.forEach(kw => {
+                const el = document.createElement('span');
+                el.className = 'vibe-keyword';
+                el.textContent = kw;
+                el.onclick = () => { document.getElementById('vibeInput').value = kw; };
+                kwGrid.appendChild(el);
+            });
+            document.getElementById('vibeKeywords').style.display = 'block';
+        }
+
+    } catch (e) {
+        errorEl.textContent = `>_ error: ${e.message}`;
+    } finally {
+        loadingEl.className = 'vibe-loading';
+        btn.disabled = false;
+        vibeState.isLoading = false;
+    }
+}
+
+async function loadMoreVibe() {
+    if (vibeState.isLoading) return;
+    vibeState.isLoading = true;
+
+    const grid = document.getElementById('vibeTracksGrid');
+
+    // Separator
+    const sep = document.createElement('div');
+    sep.className = 'vibe-batch-sep';
+    sep.textContent = `//_ batch ${Math.floor(vibeState.currentOffset / 10) + 1}`;
+    grid.appendChild(sep);
+
+    const loadingEl = document.getElementById('vibeLoading');
+    loadingEl.className = 'vibe-loading active';
+
+    try {
+        const resp = await fetch('/api/vibe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                vibe: vibeState.currentVibe,
+                videoType: vibeState.currentVideoType,
+                offset: vibeState.currentOffset,
+                exclude: vibeState.allTracks.map(t => t.name),
+            }),
+        });
+        const data = await resp.json();
+        const tracks = data.tracks || [];
+
+        tracks.forEach((t, i) => {
+            grid.appendChild(renderVibeTrack(t, vibeState.totalLoaded + i));
+        });
+
+        vibeState.allTracks = [...vibeState.allTracks, ...tracks];
+        vibeState.totalLoaded += tracks.length;
+        vibeState.currentOffset += tracks.length;
+        document.getElementById('vibeLoadCount').textContent = `${vibeState.totalLoaded} tracks`;
+    } catch (e) {
+        // silent
+    } finally {
+        loadingEl.className = 'vibe-loading';
+        vibeState.isLoading = false;
     }
 }
 
 // --- Input event listeners ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Search tab
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('keydown', (e) => {
@@ -343,7 +668,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Lyrics tab
     const lyricsInput = document.getElementById('lyricsInput');
     if (lyricsInput) {
         lyricsInput.addEventListener('keydown', (e) => {
@@ -354,6 +678,14 @@ document.addEventListener('DOMContentLoaded', () => {
             lyricsTimeout = setTimeout(() => {
                 if (lyricsInput.value.trim().length >= 2) searchLyrics();
             }, 500);
+        });
+    }
+
+    // Vibe: Ctrl/Cmd+Enter to search
+    const vibeInput = document.getElementById('vibeInput');
+    if (vibeInput) {
+        vibeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) searchVibe();
         });
     }
 });

@@ -447,6 +447,22 @@ main {
     color: #333;
 }
 
+.player-dl {
+    background: none;
+    border: none;
+    color: #333;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 6px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+}
+
+.player-dl:hover {
+    color: #fff;
+}
+
 .player-close {
     background: none;
     border: none;
@@ -513,6 +529,306 @@ body.player-open {
     margin-left: 8px;
     font-size: 13px;
     color: #222;
+}
+
+/* Vibe AI tab */
+.vibe-bar {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.vibe-bar textarea {
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 6px 0;
+    caret-color: #fff;
+    resize: none;
+    line-height: 1.5;
+}
+
+.vibe-bar textarea::placeholder {
+    color: #222;
+}
+
+.vibe-tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 6px 0;
+}
+
+.vibe-tag-btn {
+    background: none;
+    border: none;
+    padding: 2px 0;
+    margin-right: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #2a2a2a;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.vibe-tag-btn::before {
+    content: '+ ';
+    color: #1a1a1a;
+}
+
+.vibe-tag-btn:hover {
+    color: #666;
+}
+
+.vibe-controls {
+    display: flex;
+    gap: 12px;
+    margin: 8px 0;
+    align-items: center;
+}
+
+.vibe-select {
+    background: none;
+    border: none;
+    border-bottom: 1px solid #1a1a1a;
+    color: #555;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 4px 0;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    flex: 1;
+}
+
+.vibe-select option {
+    background: #0a0a0a;
+    color: #999;
+}
+
+.vibe-submit {
+    background: none;
+    border: none;
+    color: #333;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: color 0.15s;
+    padding: 4px 0;
+}
+
+.vibe-submit:hover {
+    color: #fff;
+}
+
+.vibe-error {
+    font-size: 12px;
+    color: #444;
+    padding: 4px 0;
+}
+
+.vibe-loading {
+    display: none;
+    padding: 8px 0;
+    font-size: 12px;
+    color: #333;
+}
+
+.vibe-loading.active {
+    display: block;
+}
+
+.vibe-loading span::before {
+    content: '>_ ';
+    color: #222;
+}
+
+.vibe-analysis-box {
+    border-bottom: 1px solid #1a1a1a;
+    padding: 8px 0;
+    margin-bottom: 8px;
+}
+
+.vibe-analysis-label {
+    font-size: 11px;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.vibe-analysis-text {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 4px;
+}
+
+.vibe-analysis-context {
+    font-size: 11px;
+    color: #333;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+
+.vibe-analysis-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.vibe-analysis-tags span {
+    font-size: 10px;
+    color: #2a2a2a;
+}
+
+.vibe-analysis-tags span::before {
+    content: '#';
+}
+
+/* Vibe track cards */
+.vibe-track-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 4px 4px;
+    transition: background 0.1s;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.vibe-track-card:hover {
+    background: #141414;
+}
+
+.vibe-track-num {
+    font-size: 13px;
+    color: #2a2a2a;
+    min-width: 24px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.vibe-track-num::after {
+    content: '_';
+    color: #1a1a1a;
+}
+
+.vibe-track-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.vibe-track-info .song-title {
+    font-size: 13px;
+    color: #ccc;
+    text-transform: lowercase;
+    font-weight: 400;
+}
+
+.vibe-track-info .song-artist {
+    font-size: 13px;
+    color: #3a3a3a;
+}
+
+.vibe-track-desc {
+    font-size: 11px;
+    color: #333;
+    line-height: 1.4;
+    margin-top: 2px;
+}
+
+.vibe-track-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.vibe-track-meta span {
+    font-size: 10px;
+    color: #2a2a2a;
+}
+
+.vibe-track-platforms {
+    display: flex;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.vibe-track-platforms button {
+    background: none;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #2a2a2a;
+    cursor: pointer;
+    transition: color 0.15s;
+    padding: 0;
+}
+
+.vibe-track-platforms button:hover {
+    color: #666;
+}
+
+.vibe-track-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.vibe-load-more {
+    padding: 8px 0;
+}
+
+.vibe-load-count {
+    font-size: 12px;
+    color: #222;
+    margin-left: 8px;
+}
+
+.vibe-keywords {
+    border-top: 1px solid #1a1a1a;
+    padding-top: 8px;
+    margin-top: 12px;
+}
+
+.vibe-keywords-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+}
+
+.vibe-keyword {
+    font-size: 11px;
+    color: #2a2a2a;
+    cursor: pointer;
+    transition: color 0.15s;
+    margin-right: 12px;
+}
+
+.vibe-keyword::before {
+    content: '> ';
+    color: #1a1a1a;
+}
+
+.vibe-keyword:hover {
+    color: #666;
+}
+
+.vibe-batch-sep {
+    padding: 8px 0 4px;
+    font-size: 10px;
+    color: #222;
+    border-top: 1px solid #111;
+    margin-top: 8px;
+}
+
+/* Genre load more */
+.genre-load-more {
+    padding: 8px 0;
 }
 
 @media (max-width: 600px) {

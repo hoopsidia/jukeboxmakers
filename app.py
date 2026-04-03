@@ -192,7 +192,7 @@ async def api_lyrics(q: str = Query(...), limit: int = Query(default=20, le=50))
 
 
 @app.get("/api/genre")
-async def api_genre(genre: str = Query(...), limit: int = Query(default=50, le=100)):
+async def api_genre(genre: str = Query(...), limit: int = Query(default=50, le=200)):
     """Get top charts by genre via iTunes RSS feed."""
     import httpx
 
@@ -214,15 +214,20 @@ async def api_genre(genre: str = Query(...), limit: int = Query(default=50, le=1
         "phonk": 18,
         "lo-fi": 7,
         "afrobeat": 15,
+        "rap fr": 18,
     }
 
     genre_id = genre_ids.get(genre.lower().strip(), 14)  # default to Pop
+
+    # Use French store for rap fr, US store for others
+    genre_countries = {"rap fr": "fr"}
+    country = genre_countries.get(genre.lower().strip(), "us")
 
     results = []
     try:
         async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
             resp = await client.get(
-                f"https://itunes.apple.com/us/rss/topsongs/limit={limit}/genre={genre_id}/json"
+                f"https://itunes.apple.com/{country}/rss/topsongs/limit={limit}/genre={genre_id}/json"
             )
             if resp.status_code == 200:
                 data = resp.json()
@@ -398,6 +403,95 @@ async def api_download(q: str = Query(...), filename: str = Query("song")):
             filename=f"{safe_name}.{ext}",
         )
     return JSONResponse({"error": "not found"}, status_code=404)
+
+
+@app.post("/api/vibe")
+async def api_vibe(request: Request):
+    """AI-powered music recommendation via Claude API."""
+    import httpx
+
+    body = await request.json()
+    vibe = body.get("vibe", "")
+    video_type = body.get("videoType", "basketball highlights")
+    offset = body.get("offset", 0)
+    exclude = body.get("exclude", [])
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return {"error": "ANTHROPIC_API_KEY not set", "tracks": []}
+
+    system_prompt = """Tu es l'IA musicale de TRACKFINDER, expert en tendances musicales TikTok, Instagram Reels, et contenu basketball/sport.
+
+Réponds UNIQUEMENT en JSON valide. Aucun texte avant ou après. Aucun markdown. Aucune backtick.
+
+Structure exacte :
+{
+  "vibeAnalysis": "Analyse du vibe en 2-3 phrases",
+  "vibeTags": ["tag1","tag2","tag3","tag4","tag5"],
+  "trendContext": "Contexte des tendances actuelles",
+  "tracks": [
+    {
+      "name": "Nom du track",
+      "artist": "Artiste",
+      "description": "Pourquoi ce son colle (2 phrases)",
+      "bpm": "xxx-xxx",
+      "energy": 85,
+      "mood": "Trap Sombre",
+      "trendScore": 92,
+      "usedBy": "House of Highlights, Overtime",
+      "platforms": ["YouTube","Spotify"],
+      "searchQuery": "mots clés précis pour trouver ce son"
+    }
+  ],
+  "searchKeywords": ["kw1","kw2","kw3","kw4","kw5","kw6","kw7","kw8"],
+  "nextBatchHint": "Suggestion pour explorer plus"
+}
+
+Règles :
+- Toujours exactement 10 tracks
+- Mix : artistes réels (40%), libres de droits (30%), styles précis (30%)
+- trendScore et energy = entiers 0-100
+- searchQuery ultra-précis pour YouTube
+- Si offset > 0, sons DIFFÉRENTS des précédents"""
+
+    user_msg = f"""Type de vidéo : {video_type}
+Description du vibe : "{vibe}"
+Offset : {offset}"""
+    if exclude:
+        user_msg += f"\nSons déjà suggérés (ne pas répéter) : {', '.join(exclude[:30])}"
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": api_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": "claude-sonnet-4-20250514",
+                    "max_tokens": 4096,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_msg}],
+                },
+            )
+
+            if resp.status_code != 200:
+                logger.warning(f"Claude API error: {resp.status_code} {resp.text[:200]}")
+                return {"error": f"api error {resp.status_code}", "tracks": []}
+
+            data = resp.json()
+            raw = "".join(block.get("text", "") for block in data.get("content", []))
+            # Clean markdown fences if any
+            import re
+            clean = re.sub(r'```json|```', '', raw).strip()
+            parsed = __import__("json").loads(clean)
+            return parsed
+
+    except Exception as e:
+        logger.warning(f"Vibe search failed: {e}")
+        return {"error": str(e), "tracks": []}
 
 
 @app.post("/api/refresh")
