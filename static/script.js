@@ -164,6 +164,20 @@ function createResultCard(song) {
     artistDiv.textContent = song.artist;
     info.appendChild(artistDiv);
 
+    if (song.source === 'lyrics') {
+        const srcDiv = document.createElement('div');
+        srcDiv.className = 'song-source';
+        srcDiv.textContent = '[lyrics_match]';
+        info.appendChild(srcDiv);
+    }
+
+    if (song.snippet) {
+        const snippetDiv = document.createElement('div');
+        snippetDiv.className = 'song-snippet';
+        snippetDiv.textContent = `"${song.snippet.replace(/\n/g, ' / ')}"`;
+        info.appendChild(snippetDiv);
+    }
+
     if (duration) {
         const durDiv = document.createElement('div');
         durDiv.className = 'song-duration';

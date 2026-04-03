@@ -100,28 +100,90 @@ async def api_songs(
 
 @app.get("/api/search")
 async def api_search(q: str = Query(...), limit: int = Query(default=20, le=50)):
-    """Search songs via iTunes catalog. Returns results with artwork."""
+    """Search songs via iTunes + Genius (lyrics). Merges results."""
     import httpx
     from urllib.parse import quote
 
     if not q or len(q.strip()) < 2:
         return {"results": []}
 
+    results = []
+    seen = set()
+
     try:
         async with httpx.AsyncClient(timeout=8) as client:
-            resp = await client.get(
+            # Search iTunes (title/artist)
+            itunes_req = client.get(
                 f"https://itunes.apple.com/search?term={quote(q.strip())}&media=music&limit={limit}&entity=song"
             )
-            data = resp.json()
-            results = []
-            for item in data.get("results", []):
-                results.append({
-                    "title": item.get("trackName", ""),
-                    "artist": item.get("artistName", ""),
-                    "album": item.get("collectionName", ""),
-                    "artworkUrl": item.get("artworkUrl100", "").replace("100x100", "300x300"),
-                    "duration": item.get("trackTimeMillis", 0) // 1000,
-                })
+            # Search Genius (lyrics + title)
+            genius_req = client.get(
+                f"https://genius.com/api/search/multi?q={quote(q.strip())}",
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "application/json, text/plain, */*",
+                    "Referer": "https://genius.com/",
+                }
+            )
+
+            itunes_resp, genius_resp = await asyncio.gather(
+                itunes_req, genius_req, return_exceptions=True
+            )
+
+            # Parse Genius results first (lyrics matches)
+            if not isinstance(genius_resp, Exception) and genius_resp.status_code == 200:
+                try:
+                    gdata = genius_resp.json()
+                    sections = gdata.get("response", {}).get("sections", [])
+                    for section in sections:
+                        if section.get("type") in ("song", "lyric"):
+                            for hit in section.get("hits", []):
+                                r = hit.get("result", {})
+                                title = r.get("title", "")
+                                artist = r.get("primary_artist", {}).get("name", "") or r.get("artist_names", "")
+                                key = f"{title.lower()}_{artist.lower()}"
+                                if key not in seen and title:
+                                    seen.add(key)
+                                    source = "lyrics" if section.get("type") == "lyric" else "title"
+                                    # Extract lyrics snippet from highlights
+                                    snippet = ""
+                                    highlights = hit.get("highlights", [])
+                                    for hl in highlights:
+                                        val = hl.get("value") or hl.get("snippet") or ""
+                                        if val:
+                                            snippet = val.strip()
+                                            break
+                                    if not snippet:
+                                        snippet = r.get("lyrics_snippet", "")
+                                    results.append({
+                                        "title": title,
+                                        "artist": artist,
+                                        "album": "",
+                                        "artworkUrl": "",
+                                        "duration": 0,
+                                        "source": source,
+                                        "snippet": snippet,
+                                    })
+                except Exception:
+                    pass
+
+            # Parse iTunes results
+            if not isinstance(itunes_resp, Exception) and itunes_resp.status_code == 200:
+                data = itunes_resp.json()
+                for item in data.get("results", []):
+                    title = item.get("trackName", "")
+                    artist = item.get("artistName", "")
+                    key = f"{title.lower()}_{artist.lower()}"
+                    if key not in seen and title:
+                        seen.add(key)
+                        results.append({
+                            "title": title,
+                            "artist": artist,
+                            "album": item.get("collectionName", ""),
+                            "artworkUrl": "",
+                            "duration": item.get("trackTimeMillis", 0) // 1000,
+                            "source": "catalog",
+                        })
             return {"results": results}
     except Exception as e:
         logger.warning(f"iTunes search failed: {e}")
