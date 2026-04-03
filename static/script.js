@@ -2,7 +2,7 @@ let visibleCount = 40;
 const BATCH_SIZE = 20;
 
 // --- Tabs ---
-const TAB_IDS = ['trending', 'search', 'lyrics', 'genre', 'vibe'];
+const TAB_IDS = ['trending', 'search', 'lyrics', 'genre', 'vibe', 'sfx'];
 
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -26,6 +26,9 @@ function switchTab(tab) {
     } else if (tab === 'vibe') {
         document.getElementById('tabVibe').classList.add('active');
         document.getElementById('vibeInput').focus();
+    } else if (tab === 'sfx') {
+        document.getElementById('tabSfx').classList.add('active');
+        document.getElementById('sfxInput').focus();
     }
 }
 
@@ -688,7 +691,125 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) searchVibe();
         });
     }
+
+    // SFX: Enter to generate
+    const sfxInput = document.getElementById('sfxInput');
+    if (sfxInput) {
+        sfxInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') generateSfx();
+        });
+    }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SFX GENERATOR (ElevenLabs)
+// ═══════════════════════════════════════════════════════════════════════════════
+let sfxGenerating = false;
+let sfxCounter = 0;
+
+async function generateSfx() {
+    if (sfxGenerating) return;
+
+    const input = document.getElementById('sfxInput');
+    const prompt = input.value.trim();
+    const duration = parseFloat(document.getElementById('sfxDuration').value);
+    const errorEl = document.getElementById('sfxError');
+    const loadingEl = document.getElementById('sfxLoading');
+    const results = document.getElementById('sfxResults');
+    const btn = document.getElementById('sfxGenBtn');
+
+    if (!prompt) {
+        errorEl.textContent = '>_ error: describe a sound first';
+        return;
+    }
+    errorEl.textContent = '';
+    sfxGenerating = true;
+    loadingEl.style.display = 'block';
+    btn.disabled = true;
+
+    try {
+        const resp = await fetch('/api/sfx', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt, duration }),
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+            errorEl.textContent = `>_ error: ${data.error}`;
+            return;
+        }
+
+        sfxCounter++;
+
+        // Create SFX card
+        const card = document.createElement('div');
+        card.className = 'sfx-card';
+
+        const num = document.createElement('div');
+        num.className = 'sfx-num';
+        num.textContent = String(sfxCounter).padStart(3, '0') + '_';
+        card.appendChild(num);
+
+        const info = document.createElement('div');
+        info.className = 'sfx-info';
+
+        const promptDiv = document.createElement('div');
+        promptDiv.className = 'sfx-prompt';
+        promptDiv.textContent = prompt;
+        info.appendChild(promptDiv);
+
+        const meta = document.createElement('div');
+        meta.className = 'sfx-meta';
+        meta.textContent = `${duration}s${data.cached ? ' [cached]' : ''}`;
+        info.appendChild(meta);
+
+        const audio = document.createElement('audio');
+        audio.className = 'sfx-audio';
+        audio.src = data.audioUrl;
+        audio.controls = true;
+        audio.autoplay = true;
+        info.appendChild(audio);
+
+        card.appendChild(info);
+
+        const actions = document.createElement('div');
+        actions.className = 'song-links';
+
+        const playBtn = document.createElement('button');
+        playBtn.className = 'link-btn play';
+        playBtn.onclick = () => { audio.currentTime = 0; audio.play(); };
+        actions.appendChild(playBtn);
+
+        const dlBtn = document.createElement('button');
+        dlBtn.className = 'link-btn download';
+        dlBtn.onclick = () => {
+            const a = document.createElement('a');
+            a.href = data.audioUrl;
+            a.download = `sfx_${prompt.replace(/[^a-z0-9]/gi, '_').substring(0, 30)}.mp3`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+        actions.appendChild(dlBtn);
+
+        card.appendChild(actions);
+
+        // Prepend (newest first)
+        results.insertBefore(card, results.firstChild);
+
+        // Clear input for next prompt
+        input.value = '';
+        input.focus();
+
+    } catch (e) {
+        errorEl.textContent = `>_ error: ${e.message}`;
+    } finally {
+        sfxGenerating = false;
+        loadingEl.style.display = 'none';
+        btn.disabled = false;
+    }
+}
 
 // Auto-reload every 5 minutes
 setInterval(() => {

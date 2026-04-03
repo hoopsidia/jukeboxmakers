@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DL</title>
-    <link rel="stylesheet" href="/static/style.css?v=11">
+    <link rel="stylesheet" href="/static/style.css?v=12">
 </head>
 <body>
     <header>
@@ -14,6 +14,7 @@
             <button class="tab-btn" onclick="switchTab('lyrics')">lyrics --scan</button>
             <button class="tab-btn" onclick="switchTab('genre')">genre --browse</button>
             <button class="tab-btn" onclick="switchTab('vibe')">vibe --ai</button>
+            <button class="tab-btn" onclick="switchTab('sfx')">sfx --generate</button>
         </div>
     </header>
 
@@ -150,6 +151,26 @@
                 </div>
             </div>
         </div>
+        <!-- Tab: SFX Generator -->
+        <div class="tab-content" id="tabSfx">
+            <div class="search-container">
+                <div class="search-bar">
+                    <span class="search-prompt">&gt;_</span>
+                    <input type="text" id="sfxInput" placeholder="describe a sound... (swoosh, impact, riser, glitch...)" autocomplete="off">
+                </div>
+            </div>
+            <div class="sfx-controls">
+                <label class="sfx-duration-label">duration_</label>
+                <input type="range" id="sfxDuration" min="0.5" max="22" step="0.5" value="2" class="sfx-slider" oninput="document.getElementById('sfxDurationVal').textContent = this.value + 's'">
+                <span class="sfx-duration-val" id="sfxDurationVal">2s</span>
+                <button class="vibe-submit" id="sfxGenBtn" onclick="generateSfx()">[GENERATE]</button>
+            </div>
+            <div class="sfx-loading" id="sfxLoading">
+                <span>>_ generating sfx...</span>
+            </div>
+            <div class="sfx-error" id="sfxError"></div>
+            <div class="sfx-results" id="sfxResults"></div>
+        </div>
     </main>
 
     <div class="player-bar" id="playerBar">
@@ -164,6 +185,6 @@
         <audio id="playerAudio" controls autoplay></audio>
     </div>
 
-    <script src="/static/script.js?v=10"></script>
+    <script src="/static/script.js?v=12"></script>
 </body>
 </html>
